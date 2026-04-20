@@ -1810,3 +1810,449 @@ function calcAllKootas(nak1,pada1,nak2,pada2,rashi1,rashi2){
   const gana={score:ganaDosha&&ganaExc.cancelled?3:ganaScore,max:6,dosha:ganaDosha,cancelled:ganaExc.cancelled,cancellationReason:ganaExc.reason,note:GANA_NOTE[`${gt1}-${gt2}`]||`${g1||'?'}+${g2||'?'}`};
 
   const bi1=RASHI_ORDER.indexOf(rashi1),bi2=RASHI_ORDER.indexOf(rashi2);let bhakootScore=7;let bhakootDosha=false;let bhakoot
+  Note='No Bhakoot Dosha — financial harmony';
+  if(bi1>=0&&bi2>=0){
+    const d1=((bi2-bi1)+12)%12+1,d2=((bi1-bi2)+12)%12+1;
+    const badP=[[6,8],[2,12],[5,9]];
+    for(const [a,b] of badP){
+      if((d1===a&&d2===b)||(d1===b&&d2===a)){bhakootDosha=true;bhakootScore=0;bhakootNote=`Bhakoot Dosha (${d1}/${d2} pattern) — financial separation risk`;break;}
+    }
+  }
+  const bhakootExc=bhakootDosha&&rashi1&&rashi2?checkBhakootException(rashi1,rashi2):{cancelled:false,reason:''};
+  const bhakoot={score:bhakootDosha&&bhakootExc.cancelled?5:bhakootScore,max:7,dosha:bhakootDosha,
+    cancelled:bhakootExc.cancelled,cancellationReason:bhakootExc.reason,note:bhakootNote};
+
+  const nd1=NADI_MAP[n1],nd2=NADI_MAP[n2];
+  let nadiScore=8;let nadiDosha=false;let nadiNote='Different Nadi — full 8 points. Healthy progeny indicated.';
+  if(nd1!==undefined&&nd2!==undefined&&nd1===nd2){
+    nadiDosha=true;nadiScore=0;nadiNote=`NADI DOSHA — Both have ${NADI_NAME[nd1]}. Health and progeny concern.`;
+  }
+  const nadiExc1=nadiDosha&&rashi1&&rashi2?checkNadiException(n1,n2,rashi1,rashi2):{cancelled:false,reason:''};
+  const nadiExc2=nadiDosha&&pada1&&pada2?checkNadiExceptionByPada(n1,pada1,n2,pada2):{cancelled:false,reason:''};
+  const nadiCancelled=nadiExc1.cancelled||nadiExc2.cancelled;
+  const nadiCancelReason=nadiExc1.cancelled?nadiExc1.reason:nadiExc2.cancelled?nadiExc2.reason:'';
+  const nadi={score:nadiCancelled?6:nadiScore,max:8,dosha:nadiDosha,cancelled:nadiCancelled,
+    cancellationReason:nadiCancelReason,note:nadiNote};
+
+  const rj1=RAJJU_MAP[n1]??-1,rj2=RAJJU_MAP[n2]??-1;
+  const rajjuDosha=rj1>=0&&rj2>=0&&rj1===rj2;
+  const rajju={dosha:rajjuDosha,type:rj1>=0?RAJJU_NAME[rj1]:'Unknown',
+    risk:rj1>=0?RAJJU_RISK[rj1]:'',cancelled:false,
+    note:rajjuDosha?`RAJJU DOSHA — Both in ${RAJJU_NAME[rj1]}. ${RAJJU_RISK[rj1]}. Serious concern.`:'No Rajju Dosha — safe'};
+
+  let vedhaDosha=false;let vedhaNote='No Vedha — no obstruction between Nakshatras';
+  for(const [a,b] of VEDHA_PAIRS){
+    if((n1===a&&n2===b)||(n1===b&&n2===a)){vedhaDosha=true;vedhaNote=`VEDHA DOSHA — ${n1}+${n2} pierce each other. Obstacles in marriage.`;break;}
+  }
+  const vedha={dosha:vedhaDosha,note:vedhaNote,cancelled:false};
+
+  const sd=getStreeDirgha(n1,n2);
+
+  let navCompat={score:0,note:'Enter Pada for Navamsha analysis',hasData:false};
+  if(nav1&&nav2){
+    const navFr=gF(navLordNum1||0,navLordNum2||0);
+    const isVarg1=nav1===rashi1,isVarg2=nav2===rashi2;
+    let ns=0;
+    if(navFr==='Same')ns=5;else if(navFr==='Friendly')ns=4;else if(navFr==='Hostile')ns=1;else ns=3;
+    navCompat={score:ns,note:`P1 Navamsha: ${nav1}(${navLord1}) | P2 Navamsha: ${nav2}(${navLord2}) | Lords: ${navFr}`,
+      hasData:true,isVarg1,isVarg2,nav1,nav2,navLord1,navLord2,navFr};
+  }
+
+  const kootas=[varna,vashya,tara,yoni,grahaMaitri,gana,bhakoot,nadi];
+  const koota_labels=['Varna','Vashya','Tara','Yoni','Graha Maitri','Gana','Bhakoot','Nadi'];
+  const total=kootas.reduce((a,k)=>a+k.score,0);
+
+  return{kootas,koota_labels,total,gana,bhakoot,nadi,rajju,vedha,navCompat,streeDirgha:sd,g1,g2,nav1,nav2,navLord1,navLord2};
+}
+
+// ═══════ TAB 7: MARRIAGE COMPATIBILITY V2 ═══════
+function MarriageCompat(){
+  const [p1name,sP1n]=useState('');const [p1day,sP1d]=useState('');const [p1month,sP1m]=useState('');const [p1year,sP1y]=useState('');
+  const [p1rashi,sP1r]=useState('');const [p1nak,sP1nak]=useState('');const [p1pada,sP1p]=useState('');
+  const [p2name,sP2n]=useState('');const [p2day,sP2d]=useState('');const [p2month,sP2m]=useState('');const [p2year,sP2y]=useState('');
+  const [p2rashi,sP2r]=useState('');const [p2nak,sP2nak]=useState('');const [p2pada,sP2p]=useState('');
+  const [show,sShow]=useState(false);
+
+  const r=useMemo(()=>{
+    if(!p1day||!p1month||!p1year||!p2day||!p2month||!p2year)return null;
+    const d1=parseInt(p1day),m1=parseInt(p1month),y1=parseInt(p1year);
+    const d2=parseInt(p2day),m2=parseInt(p2month),y2=parseInt(p2year);
+    if([d1,m1,y1,d2,m2,y2].some(isNaN))return null;
+
+    const b1=cB(d1),l1=cL(d1,m1,y1),nc1=p1name?cN(p1name):null;
+    const b2=cB(d2),l2=cL(d2,m2,y2),nc2=p2name?cN(p2name):null;
+    const bCompat=gF(b1.r,b2.r),lCompat=gF(l1.r,l2.r);
+    const nameCompat=nc1&&nc2?gF(nc1.r,nc2.r):null;
+    const finScore=(bCompat==='Friendly'?2:bCompat==='Same'?3:bCompat==='Hostile'?-1:1)+
+                   (lCompat==='Friendly'?2:lCompat==='Same'?3:lCompat==='Hostile'?-1:1);
+
+    const n1=p1nak!==''?NAK[parseInt(p1nak)]?.n:'';
+    const n2=p2nak!==''?NAK[parseInt(p2nak)]?.n:'';
+    const pd1=p1pada?parseInt(p1pada):0;
+    const pd2=p2pada?parseInt(p2pada):0;
+
+    const koota=calcAllKootas(n1,pd1,n2,pd2,p1rashi,p2rashi);
+    const quality=koota.total>=28?'Excellent':koota.total>=24?'Very Good':koota.total>=18?'Good':koota.total>=12?'Acceptable':'Needs Remedies';
+
+    const mangal1=['Mesha','Vrishchika'].includes(p1rashi);
+    const mangal2=['Mesha','Vrishchika'].includes(p2rashi);
+    const mangalCancelled=mangal1&&mangal2;
+
+    const cg1=gG(d1,m1,y1,nc1?.r||0,0,0);
+    const cg2=gG(d2,m2,y2,nc2?.r||0,0,0);
+    const combined=new Set([...cg1.present,...cg2.present]);
+    const sharedMissing=[1,2,3,4,5,6,7,8,9].filter(n=>!combined.has(n));
+    const sharedPresent=[...combined];
+
+    return{b1,l1,nc1,b2,l2,nc2,bCompat,lCompat,nameCompat,finScore,koota,quality,mangal1,mangal2,mangalCancelled,cg1,cg2,sharedMissing,sharedPresent,n1,n2,pd1,pd2};
+  },[p1name,p1day,p1month,p1year,p1rashi,p1nak,p1pada,p2name,p2day,p2month,p2year,p2rashi,p2nak,p2pada]);
+
+  const qColor={Excellent:'#059669','Very Good':'#10b981',Good:'#d97706',Acceptable:'#f59e0b','Needs Remedies':'#dc2626'};
+  const cColor={Friendly:'#059669',Hostile:'#dc2626',Neutral:'#d97706',Same:'#2563eb'};
+
+  return(<div style={{display:'flex',flexDirection:'column',gap:20}}>
+    <div style={CS}>
+      <h3 style={{color:'#0f172a',fontWeight:'800',fontSize:18,marginBottom:6}}>Marriage Compatibility</h3>
+      <p style={{color:'#64748b',fontSize:12,fontWeight:'500',marginBottom:16}}>Chaldean + Vedic Ashtakoot + Rajju + Vedha + Navamsha (Pada-level). Most complete analysis possible without full birth chart.</p>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* Person 1 */}
+        <div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0'}}>
+          <div style={{color:'#3b82f6',fontWeight:'800',fontSize:14,marginBottom:12}}>Person 1 (Groom / Partner A)</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            <input style={IS} value={p1name} onChange={e=>sP1n(e.target.value)} placeholder="Name" autoComplete="off"/>
+            <DateDropdowns day={p1day} setDay={sP1d} month={p1month} setMonth={sP1m} year={p1year} setYear={sP1y} yearStart={1940} yearEnd={2010} label="Date of Birth"/>
+            <select style={SS} value={p1rashi} onChange={e=>sP1r(e.target.value)}>
+              <option value="">Select Rashi</option>{RASHI_ORDER.map(r=><option key={r} value={r}>{r} ({RE[r]})</option>)}
+            </select>
+            <select style={SS} value={p1nak} onChange={e=>sP1nak(e.target.value)}>
+              <option value="">Select Nakshatra</option>{NAK.map((n,i)=><option key={i} value={i}>{n.n} ({n.lord})</option>)}
+            </select>
+            {p1nak!==''&&<div>
+              <div style={{fontSize:10,fontWeight:'600',color:'#64748b',marginBottom:6}}>Pada (for Navamsha & Nadi exception)</div>
+              <div style={{display:'flex',gap:6}}>{[1,2,3,4].map(p=>{const nk=NAK[parseInt(p1nak)];return(
+                <button key={p} onClick={()=>sP1p(String(p))} style={{flex:1,padding:'8px 4px',borderRadius:8,border:'1px solid #cbd5e1',cursor:'pointer',
+                  background:p1pada===String(p)?'#0f172a':'#ffffff',color:p1pada===String(p)?'#ffffff':'#0f172a',fontSize:11,lineHeight:1.3,transition:'all 0.2s'}}>
+                  <div style={{fontWeight:'700'}}>P{p}</div><div style={{fontSize:9}}>{nk?.nav[p-1]}</div><div style={{fontSize:10,fontWeight:'700',color:p1pada===String(p)?'#fde68a':'#d97706'}}>{nk?.let[p-1]}</div>
+                </button>);})}
+              </div></div>}
+          </div>
+        </div>
+        {/* Person 2 */}
+        <div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0'}}>
+          <div style={{color:'#db2777',fontWeight:'800',fontSize:14,marginBottom:12}}>Person 2 (Bride / Partner B)</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            <input style={IS} value={p2name} onChange={e=>sP2n(e.target.value)} placeholder="Name" autoComplete="off"/>
+            <DateDropdowns day={p2day} setDay={sP2d} month={p2month} setMonth={sP2m} year={p2year} setYear={sP2y} yearStart={1940} yearEnd={2010} label="Date of Birth"/>
+            <select style={SS} value={p2rashi} onChange={e=>sP2r(e.target.value)}>
+              <option value="">Select Rashi</option>{RASHI_ORDER.map(r=><option key={r} value={r}>{r} ({RE[r]})</option>)}
+            </select>
+            <select style={SS} value={p2nak} onChange={e=>sP2nak(e.target.value)}>
+              <option value="">Select Nakshatra</option>{NAK.map((n,i)=><option key={i} value={i}>{n.n} ({n.lord})</option>)}
+            </select>
+            {p2nak!==''&&<div>
+              <div style={{fontSize:10,fontWeight:'600',color:'#64748b',marginBottom:6}}>Pada (for Navamsha & Nadi exception)</div>
+              <div style={{display:'flex',gap:6}}>{[1,2,3,4].map(p=>{const nk=NAK[parseInt(p2nak)];return(
+                <button key={p} onClick={()=>sP2p(String(p))} style={{flex:1,padding:'8px 4px',borderRadius:8,border:'1px solid #cbd5e1',cursor:'pointer',
+                  background:p2pada===String(p)?'#0f172a':'#ffffff',color:p2pada===String(p)?'#ffffff':'#0f172a',fontSize:11,lineHeight:1.3,transition:'all 0.2s'}}>
+                  <div style={{fontWeight:'700'}}>P{p}</div><div style={{fontSize:9}}>{nk?.nav[p-1]}</div><div style={{fontSize:10,fontWeight:'700',color:p2pada===String(p)?'#fde68a':'#d97706'}}>{nk?.let[p-1]}</div>
+                </button>);})}
+              </div></div>}
+          </div>
+        </div>
+      </div>
+      <button style={{...BS,marginTop:20}} onClick={()=>sShow(true)}>Analyze Compatibility</button>
+    </div>
+
+    {show&&r&&(<div id="marriage-results" className="anim" style={{display:'flex',flexDirection:'column',gap:20}}>
+
+      <div style={{background:'linear-gradient(135deg,#0f172a,#1e293b)',borderRadius:16,padding:30,textAlign:'center',boxShadow:'0 10px 15px -3px rgba(0,0,0,0.1)'}}>
+        <div style={{color:'#94a3b8',fontSize:14,fontWeight:'600',marginBottom:8,textTransform:'uppercase',letterSpacing:1}}>{p1name||'Person 1'} + {p2name||'Person 2'}</div>
+        <div style={{fontSize:64,fontWeight:'800',color:qColor[r.quality],lineHeight:1}}>{r.koota.total}<span style={{fontSize:24,color:'#64748b'}}>/36</span></div>
+        <div style={{fontSize:24,fontWeight:'800',color:qColor[r.quality],marginTop:4}}>{r.quality}</div>
+        <div style={{fontSize:13,fontWeight:'500',color:'#f1f5f9',marginTop:12}}>
+          {r.koota.total>=28?'Highly recommended — strong match across all parameters':
+          r.koota.total>=24?'Good match — proceed with confidence. Minor adjustments needed.':
+          r.koota.total>=18?'Acceptable — workable but requires effort and understanding':
+          r.koota.total>=12?'Caution — significant differences. Remedies strongly advised':'Difficult match — consult experienced Jyotishi before proceeding'}
+        </div>
+      </div>
+
+      {/* DOSHA PANEL */}
+      {(r.koota.nadi.dosha||r.koota.bhakoot.dosha||r.koota.rajju.dosha||r.koota.vedha.dosha||r.koota.gana.dosha||r.mangal1||r.mangal2)&&(
+        <div style={{...CS,border:'2px solid #ef4444'}}>
+          <h4 style={{color:'#dc2626',fontWeight:'800',fontSize:16,marginBottom:16,textTransform:'uppercase',letterSpacing:0.5}}>⚠️ Dosha Analysis</h4>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+
+            {r.koota.nadi.dosha&&<div style={{background:r.koota.nadi.cancelled?'#ecfdf5':'#fef2f2',borderRadius:10,padding:14,border:'1px solid',borderColor:r.koota.nadi.cancelled?'#10b981':'#fca5a5',borderLeftWidth:4}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontWeight:'800',fontSize:13,color:r.koota.nadi.cancelled?'#059669':'#dc2626'}}>NADI DOSHA {r.koota.nadi.cancelled?'✅ CANCELLED':'❌ ACTIVE'}</span>
+                <span style={{fontSize:11,fontWeight:'600',color:'#64748b'}}>Max 8 pts | Score: {r.koota.nadi.score}</span>
+              </div>
+              <div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>{r.koota.nadi.note}</div>
+              {r.koota.nadi.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#059669',marginTop:6}}>Why cancelled: {r.koota.nadi.cancellationReason}</div>}
+              {!r.koota.nadi.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>Remedy: Maha Mrityunjaya Japa (1.25 lakh), Nadi Nivarana Puja before wedding.</div>}
+            </div>}
+
+            {r.koota.bhakoot.dosha&&<div style={{background:r.koota.bhakoot.cancelled?'#ecfdf5':'#fef2f2',borderRadius:10,padding:14,border:'1px solid',borderColor:r.koota.bhakoot.cancelled?'#10b981':'#fca5a5',borderLeftWidth:4}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontWeight:'800',fontSize:13,color:r.koota.bhakoot.cancelled?'#059669':'#dc2626'}}>BHAKOOT DOSHA {r.koota.bhakoot.cancelled?'✅ CANCELLED':'❌ ACTIVE'}</span>
+                <span style={{fontSize:11,fontWeight:'600',color:'#64748b'}}>Max 7 pts | Score: {r.koota.bhakoot.score}</span>
+              </div>
+              <div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>{r.koota.bhakoot.note}</div>
+              {r.koota.bhakoot.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#059669',marginTop:6}}>Why cancelled: {r.koota.bhakoot.cancellationReason}</div>}
+              {!r.koota.bhakoot.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>Remedy: Laxmi-Narayan Puja, joint financial planning, avoid major investments in year 1-2.</div>}
+            </div>}
+
+            {r.koota.gana.dosha&&<div style={{background:r.koota.gana.cancelled?'#ecfdf5':'#fffbeb',borderRadius:10,padding:14,border:'1px solid',borderColor:r.koota.gana.cancelled?'#10b981':'#fde68a',borderLeftWidth:4,borderLeftColor:r.koota.gana.cancelled?'#10b981':'#f59e0b'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span style={{fontWeight:'800',fontSize:13,color:r.koota.gana.cancelled?'#059669':'#d97706'}}>GANA DOSHA {r.koota.gana.cancelled?'✅ MITIGATED':'⚠️ ACTIVE'}</span>
+                <span style={{fontSize:11,fontWeight:'600',color:'#64748b'}}>Max 6 pts | Score: {r.koota.gana.score}</span>
+              </div>
+              <div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>{r.koota.gana.note}</div>
+              {r.koota.gana.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#059669',marginTop:6}}>Mitigated: {r.koota.gana.cancellationReason}</div>}
+              {!r.koota.gana.cancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>Remedy: Both partners need to consciously adapt communication styles. Counseling helps.</div>}
+            </div>}
+
+            {r.koota.rajju.dosha&&<div style={{background:'#fef2f2',borderRadius:10,padding:14,border:'1px solid #fca5a5',borderLeftWidth:4,borderLeftColor:'#ef4444'}}>
+              <div style={{fontWeight:'800',fontSize:13,color:'#dc2626'}}>RAJJU DOSHA ❌ ACTIVE — SERIOUS</div>
+              <div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>{r.koota.rajju.note}</div>
+              <div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>Remedy: Specific Rajju Dosha Shanti Puja required. Consult Jyotishi for detailed ritual.</div>
+            </div>}
+
+            {r.koota.vedha.dosha&&<div style={{background:'#fef2f2',borderRadius:10,padding:14,border:'1px solid #fca5a5',borderLeftWidth:4,borderLeftColor:'#ef4444'}}>
+              <div style={{fontWeight:'800',fontSize:13,color:'#dc2626'}}>VEDHA DOSHA ❌ ACTIVE</div>
+              <div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>{r.koota.vedha.note}</div>
+              <div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>Remedy: Graha Shanti Puja for the Nakshatra lords involved.</div>
+            </div>}
+
+            {(r.mangal1||r.mangal2)&&<div style={{background:r.mangalCancelled?'#ecfdf5':'#fffbeb',borderRadius:10,padding:14,border:'1px solid',borderColor:r.mangalCancelled?'#10b981':'#fde68a',borderLeftWidth:4,borderLeftColor:r.mangalCancelled?'#10b981':'#f59e0b'}}>
+              <div style={{fontWeight:'800',fontSize:13,color:r.mangalCancelled?'#059669':'#d97706'}}>MANGAL DOSHA {r.mangalCancelled?'✅ CANCELLED (Both have it)':'⚠️ CHECK REQUIRED'}</div>
+              {r.mangal1&&<div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:6}}>Person 1 ({p1rashi}) = Mars-ruled Rashi. Mangal influence likely.</div>}
+              {r.mangal2&&<div style={{fontSize:12,fontWeight:'500',color:'#0f172a',marginTop:4}}>Person 2 ({p2rashi}) = Mars-ruled Rashi. Mangal influence likely.</div>}
+              {r.mangalCancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#059669',marginTop:6}}>Both have Mangal — cancels in most classical systems.</div>}
+              {!r.mangalCancelled&&<div style={{fontSize:11,fontWeight:'600',color:'#d97706',marginTop:6}}>⚠️ Confidence: 5/10 — Mangal Dosha needs full chart (house positions) for accurate verdict. This is Rashi-level only.</div>}
+            </div>}
+          </div>
+        </div>
+      )}
+
+      {r.koota.navCompat.hasData&&<div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Navamsha (Soul-Level) Compatibility</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+          <div style={{background:'#f8fafc',borderRadius:12,padding:16,textAlign:'center',border:'1px solid #e2e8f0'}}>
+            <div style={{color:'#3b82f6',fontSize:12,fontWeight:'800',textTransform:'uppercase',letterSpacing:0.5}}>Person 1 — Pada {r.pd1}</div>
+            <div style={{fontSize:24,fontWeight:'800',color:'#0f172a',marginTop:8}}>{r.koota.navCompat.nav1||'—'}</div>
+            <div style={{fontSize:12,fontWeight:'600',color:'#64748b',marginTop:4}}>{RE[r.koota.navCompat.nav1]||''} | Lord: {r.koota.navCompat.navLord1}</div>
+            {r.koota.navCompat.isVarg1&&<div style={{fontSize:11,fontWeight:'700',color:'#059669',marginTop:8,background:'#ecfdf5',padding:'4px',borderRadius:6}}>VARGOTTAMA ✅</div>}
+          </div>
+          <div style={{background:'#f8fafc',borderRadius:12,padding:16,textAlign:'center',border:'1px solid #e2e8f0'}}>
+            <div style={{color:'#db2777',fontSize:12,fontWeight:'800',textTransform:'uppercase',letterSpacing:0.5}}>Person 2 — Pada {r.pd2}</div>
+            <div style={{fontSize:24,fontWeight:'800',color:'#0f172a',marginTop:8}}>{r.koota.navCompat.nav2||'—'}</div>
+            <div style={{fontSize:12,fontWeight:'600',color:'#64748b',marginTop:4}}>{RE[r.koota.navCompat.nav2]||''} | Lord: {r.koota.navCompat.navLord2}</div>
+            {r.koota.navCompat.isVarg2&&<div style={{fontSize:11,fontWeight:'700',color:'#059669',marginTop:8,background:'#ecfdf5',padding:'4px',borderRadius:6}}>VARGOTTAMA ✅</div>}
+          </div>
+        </div>
+        <div style={{padding:16,background:'#f8fafc',borderRadius:12,textAlign:'center',border:'1px solid #e2e8f0'}}>
+          <span style={{color:'#0f172a',fontWeight:'800',fontSize:14}}>Navamsha Lords: </span>
+          <span style={{color:cColor[r.koota.navCompat.navFr]||'#0f172a',fontWeight:'800',fontSize:14}}>{r.koota.navCompat.navLord1} + {r.koota.navCompat.navLord2} = {r.koota.navCompat.navFr}</span>
+          <div style={{fontSize:12,fontWeight:'500',color:'#475569',marginTop:8}}>
+            {r.koota.navCompat.navFr==='Same'?'Deep soul resonance — they understand each other\'s innermost nature':
+            r.koota.navCompat.navFr==='Friendly'?'Soul compatibility is strong — inner nature supports each other':
+            r.koota.navCompat.navFr==='Hostile'?'Soul-level tension — outer life may seem fine but inner needs conflict':
+            'Neutral soul compatibility — neither helping nor hindering'}
+          </div>
+        </div>
+      </div>}
+
+      <div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Ashtakoot (36-Point) Breakdown</h4>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        {r.koota.kootas.map((k,i)=>{
+          const pct=k.max>0?k.score/k.max:0;
+          const label=r.koota.koota_labels[i];
+          return(<div key={i} style={{background:'#ffffff',borderRadius:10,padding:16,border:'1px solid #e2e8f0',boxShadow:'0 1px 2px rgba(0,0,0,0.02)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+              <div><span style={{color:'#0f172a',fontWeight:'800',fontSize:13}}>{label}</span><span style={{color:'#94a3b8',fontSize:11,fontWeight:'600',marginLeft:6}}>/{k.max}</span></div>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
+                {k.dosha&&k.cancelled&&<span style={{fontSize:10,fontWeight:'700',color:'#059669',background:'#ecfdf5',padding:'2px 8px',borderRadius:6,border:'1px solid #10b981'}}>Cancelled</span>}
+                {k.dosha&&!k.cancelled&&<span style={{fontSize:10,fontWeight:'700',color:'#dc2626',background:'#fef2f2',padding:'2px 8px',borderRadius:6,border:'1px solid #fca5a5'}}>Dosha</span>}
+                <span style={{fontWeight:'800',fontSize:15,color:pct>=0.7?'#059669':pct>=0.5?'#d97706':'#dc2626'}}>{k.score}/{k.max}</span>
+              </div>
+            </div>
+            <div style={{height:6,background:'#f1f5f9',borderRadius:4,overflow:'hidden'}}>
+              <div style={{height:6,borderRadius:4,width:`${pct*100}%`,background:pct>=0.7?'#10b981':pct>=0.5?'#f59e0b':'#ef4444',transition:'width .5s ease'}}></div>
+            </div>
+            <div style={{fontSize:11,fontWeight:'500',color:'#64748b',marginTop:8}}>{k.note}</div>
+          </div>);})}
+        </div>
+        <div style={{marginTop:16,padding:20,background:'linear-gradient(135deg,#0f172a,#1e293b)',borderRadius:12,display:'flex',justifyContent:'space-between',alignItems:'center',color:'#ffffff',boxShadow:'0 4px 6px rgba(0,0,0,0.1)'}}>
+          <span style={{fontWeight:'800',fontSize:18}}>Total: {r.koota.total}/36</span>
+          <span style={{color:qColor[r.quality],fontWeight:'800',fontSize:18}}>{r.quality}</span>
+        </div>
+      </div>
+
+      <div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Rajju & Vedha (Extended Analysis)</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0',borderLeftWidth:4,borderLeftColor:r.koota.rajju.dosha?'#ef4444':'#10b981'}}>
+            <div style={{fontWeight:'800',fontSize:13,color:r.koota.rajju.dosha?'#dc2626':'#059669',marginBottom:6}}>
+              Rajju Koota {r.koota.rajju.dosha?'❌':'✅'}
+            </div>
+            <div style={{fontSize:11,fontWeight:'500',color:'#334155'}}>{r.koota.rajju.note}</div>
+          </div>
+          <div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0',borderLeftWidth:4,borderLeftColor:r.koota.vedha.dosha?'#ef4444':'#10b981'}}>
+            <div style={{fontWeight:'800',fontSize:13,color:r.koota.vedha.dosha?'#dc2626':'#059669',marginBottom:6}}>
+              Vedha Koota {r.koota.vedha.dosha?'❌':'✅'}
+            </div>
+            <div style={{fontSize:11,fontWeight:'500',color:'#334155'}}>{r.koota.vedha.note}</div>
+          </div>
+          <div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0',borderLeftWidth:4,borderLeftColor:r.koota.streeDirgha.pass?'#10b981':'#f59e0b'}}>
+            <div style={{fontWeight:'800',fontSize:13,color:r.koota.streeDirgha.pass?'#059669':'#d97706',marginBottom:6}}>
+              Stree Dirgha {r.koota.streeDirgha.pass?'✅':'⚠️'}
+            </div>
+            <div style={{fontSize:11,fontWeight:'500',color:'#334155'}}>{r.koota.streeDirgha.note}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Chaldean Number Compatibility</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          {[
+            {l1:'Birth P1',v1:r.b1.r,l2:'Birth P2',v2:r.b2.r,compat:r.bCompat},
+            {l1:'LP P1',v1:r.l1.r,l2:'LP P2',v2:r.l2.r,compat:r.lCompat},
+            ...(r.nc1&&r.nc2?[{l1:`Name(${p1name?.split(' ')[0]||'P1'})`,v1:r.nc1.r,l2:`Name(${p2name?.split(' ')[0]||'P2'})`,v2:r.nc2.r,compat:r.nameCompat}]:[]),
+          ].map((item,i)=>(
+            <div key={i} style={{background:'#ffffff',borderRadius:10,padding:16,textAlign:'center',border:'1px solid #e2e8f0',boxShadow:'0 1px 3px rgba(0,0,0,0.02)'}}>
+              <div style={{fontSize:11,fontWeight:'600',color:'#64748b'}}>{item.l1} <b style={{color:'#0f172a',fontSize:13}}>{item.v1}</b> + {item.l2} <b style={{color:'#0f172a',fontSize:13}}>{item.v2}</b></div>
+              <div style={{fontSize:15,fontWeight:'800',color:cColor[item.compat]||'#0f172a',marginTop:6}}>{item.compat}</div>
+              <div style={{fontSize:10,fontWeight:'500',color:'#94a3b8',marginTop:4}}>{PN[item.v1]?.split('(')[0]} + {PN[item.v2]?.split('(')[0]}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:16,padding:16,background:'#f8fafc',borderRadius:12,border:'1px solid #e2e8f0'}}>
+          <div style={{fontSize:11,fontWeight:'700',color:'#64748b',textTransform:'uppercase',letterSpacing:0.5}}>Financial Outlook (Chaldean)</div>
+          <div style={{fontSize:14,fontWeight:'800',color:r.finScore>=4?'#059669':r.finScore>=2?'#d97706':'#dc2626',marginTop:6}}>
+            {r.finScore>=4?'Strong financial partnership — wealth grows together':
+            r.finScore>=2?'Moderate — steady growth with conscious planning':
+            r.finScore>=0?'Different financial energies — clear planning needed':'Financial tension risk — money management styles clash'}
+          </div>
+        </div>
+      </div>
+
+      <div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Combined Life Grid</h4>
+        <p style={{fontSize:11,fontWeight:'500',color:'#64748b',marginBottom:16}}>Numbers present across both birth charts. Missing numbers = areas the couple needs to work on together.</p>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,maxWidth:280,margin:'0 auto'}}>
+          {[4,9,2,3,5,7,8,1,6].map(num=>{
+            const inBoth=r.cg1.present.includes(num)&&r.cg2.present.includes(num);
+            const inOne=r.cg1.present.includes(num)||r.cg2.present.includes(num);
+            const missing=!inOne;
+            return(<div key={num} style={{borderRadius:8,padding:12,textAlign:'center',
+              background:inBoth?'linear-gradient(135deg,#f59e0b,#d97706)':inOne?'#3b82f6':missing?'#f1f5f9':'#e2e8f0',
+              opacity:missing?0.5:1,border:missing?'1px solid #e2e8f0':'none'}}>
+              <div style={{fontSize:20,fontWeight:'800',color:missing?'#94a3b8':'#ffffff'}}>{num}</div>
+              <div style={{fontSize:9,fontWeight:'600',color:missing?'#cbd5e1':'rgba(255,255,255,0.8)',marginTop:2}}>{PN[num]?.split('(')[0]}</div>
+              {inBoth&&<div style={{fontSize:8,fontWeight:'700',color:'#ffffff',marginTop:4,background:'rgba(0,0,0,0.2)',borderRadius:4,padding:'2px'}}>Both</div>}
+            </div>);})}
+        </div>
+        <div style={{display:'flex',gap:12,marginTop:16,fontSize:11,fontWeight:'600',justifyContent:'center',flexWrap:'wrap',color:'#475569'}}>
+          <span><span style={{display:'inline-block',width:12,height:12,background:'linear-gradient(135deg,#f59e0b,#d97706)',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>Both</span>
+          <span><span style={{display:'inline-block',width:12,height:12,background:'#3b82f6',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>One partner</span>
+          <span><span style={{display:'inline-block',width:12,height:12,background:'#f1f5f9',border:'1px solid #e2e8f0',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>Missing</span>
+        </div>
+        {r.sharedMissing.length>0&&<div style={{marginTop:16,fontSize:12,fontWeight:'600',color:'#dc2626',textAlign:'center',background:'#fef2f2',padding:'12px',borderRadius:8,border:'1px solid #fecaca'}}>
+          <b>Missing from BOTH charts: </b>{r.sharedMissing.map(n=>`${n}(${PN[n]?.split('(')[0]})`).join(', ')} <br/><span style={{fontSize:10,color:'#991b1b',marginTop:4,display:'block'}}>Choose names/business names that fill these gaps.</span>
+        </div>}
+      </div>
+
+      <div style={CS}>
+        <h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:16,fontSize:16}}>Overall Marriage Assessment</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+          <div style={{background:'#ecfdf5',padding:16,borderRadius:12,border:'1px solid #a7f3d0'}}>
+            <div style={{color:'#059669',fontWeight:'800',fontSize:12,marginBottom:10,textTransform:'uppercase',letterSpacing:0.5}}>STRENGTHS</div>
+            {r.bCompat==='Friendly'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Natural personality match — daily interactions flow easily.</div>}
+            {r.bCompat==='Same'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Same Birth energy — deep intuitive understanding without words.</div>}
+            {r.lCompat==='Friendly'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Life paths aligned — both grow in the same direction.</div>}
+            {r.lCompat==='Same'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Shared destiny — powerful life purpose together.</div>}
+            {r.koota.gana.score>=4&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Gana compatible — similar temperament, arguments resolve quickly.</div>}
+            {!r.koota.nadi.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>No Nadi Dosha — healthy children and good health for both.</div>}
+            {r.koota.nadi.dosha&&r.koota.nadi.cancelled&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Nadi Dosha cancelled — {r.koota.nadi.cancellationReason}.</div>}
+            {!r.koota.bhakoot.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>No Bhakoot Dosha — financial stability and family growth.</div>}
+            {r.koota.bhakoot.dosha&&r.koota.bhakoot.cancelled&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Bhakoot Dosha cancelled — {r.koota.bhakoot.cancellationReason}.</div>}
+            {!r.koota.rajju.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>No Rajju Dosha — longevity and health of both partners protected.</div>}
+            {!r.koota.vedha.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>No Vedha — no Nakshatra obstruction.</div>}
+            {r.koota.navCompat.hasData&&r.koota.navCompat.navFr==='Friendly'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Navamsha lords friendly — deep soul compatibility.</div>}
+            {r.koota.navCompat.isVarg1&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Person 1 is Vargottama — strong inner character. Reliable partner.</div>}
+            {r.koota.navCompat.isVarg2&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Person 2 is Vargottama — strong inner character. Reliable partner.</div>}
+            {r.finScore>=4&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #10b981',lineHeight:1.4}}>Strong financial compatibility — wealth grows after marriage.</div>}
+          </div>
+          <div style={{background:'#fef2f2',padding:16,borderRadius:12,border:'1px solid #fecaca'}}>
+            <div style={{color:'#dc2626',fontWeight:'800',fontSize:12,marginBottom:10,textTransform:'uppercase',letterSpacing:0.5}}>CHALLENGES</div>
+            {r.bCompat==='Hostile'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Birth numbers hostile — personality clashes. Needs conscious communication.</div>}
+            {r.lCompat==='Hostile'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Life paths conflict — different life goals may create distance.</div>}
+            {r.koota.gana.dosha&&!r.koota.gana.cancelled&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Gana mismatch — one gentle, one intense. Daily friction possible.</div>}
+            {r.koota.nadi.dosha&&!r.koota.nadi.cancelled&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Nadi Dosha active — health and progeny concerns. Remedy essential.</div>}
+            {r.koota.bhakoot.dosha&&!r.koota.bhakoot.cancelled&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Bhakoot Dosha active — financial separation risk. Legal clarity needed.</div>}
+            {r.koota.rajju.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Rajju Dosha — {r.koota.rajju.risk}. Serious — must remedy before marriage.</div>}
+            {r.koota.vedha.dosha&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Vedha Dosha — Nakshatra obstruction. Graha Shanti recommended.</div>}
+            {r.koota.navCompat.hasData&&r.koota.navCompat.navFr==='Hostile'&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Navamsha lords hostile — inner natures conflict at soul level.</div>}
+            {r.finScore<0&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>Financial tension — different money philosophies. Joint planning critical.</div>}
+            {r.sharedMissing.length>=5&&<div style={{fontSize:11,color:'#0f172a',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #ef4444',lineHeight:1.4}}>{r.sharedMissing.length} numbers missing from BOTH grids — significant energy gaps to fill together.</div>}
+          </div>
+        </div>
+      </div>
+
+      <div style={{...CS,background:'#f8fafc',border:'1px solid #e2e8f0'}}>
+        <h4 style={{color:'#64748b',fontSize:12,fontWeight:'800',marginBottom:12,textTransform:'uppercase',letterSpacing:0.5}}>Confidence Ratings</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,fontSize:11,fontWeight:'500',color:'#334155'}}>
+          <div>Nadi Koota: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Gana Koota: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Bhakoot Koota: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Rajju Koota: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Vedha Koota: <b style={{color:'#059669'}}>10/10</b></div>
+          <div>Navamsha (Pada): <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Dosha Exceptions: <b style={{color:'#059669'}}>8.5/10</b></div>
+          <div>Chaldean: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Stree Dirgha: <b style={{color:'#059669'}}>9/10</b></div>
+          <div>Mangal Dosha: <b style={{color:'#d97706'}}>5/10</b> (needs full chart)</div>
+        </div>
+        <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid #cbd5e1',color:'#475569',fontSize:11,fontWeight:'600'}}>Overall with correct Nakshatra+Pada: <b style={{color:'#059669',fontSize:12}}>9/10</b>. Mangal Dosha and Dasha compatibility require full birth chart from Jyotishi.</div>
+      </div>
+
+      <PDFBtn targetId="marriage-results" filename={`${p1name||'P1'}_${p2name||'P2'}_Marriage_Compatibility.pdf`}/>
+    </div>)}
+  </div>);
+}
+
+function App(){
+  const [tab,sT]=useState('personal');
+  const tabs=[
+    {id:'personal',label:'Personal',icon:'🔮'},
+    {id:'baby',label:'Baby Planner',icon:'👶'},
+    {id:'newborn',label:'Newborn',icon:'⭐'},
+    {id:'compare',label:'Compare',icon:'⚖️'},
+    {id:'names',label:'Names',icon:'✍️'},
+    {id:'muhurat',label:'Muhurat',icon:'📅'},
+    {id:'marriage',label:'Marriage',icon:'💝'},
+  ];
+  return(<div style={{minHeight:'100vh',background:'#f1f5f9',color:'#0f172a'}}>
+    <div style={{background:'linear-gradient(to bottom,#ffffff,#f8fafc)',borderBottom:'1px solid #e2e8f0',boxShadow:'0 2px 4px rgba(0,0,0,0.02)'}}>
+      <div style={{maxWidth:920,margin:'0 auto',padding:'24px 16px 20px',textAlign:'center'}}>
+        <div style={{color:'#d97706',fontSize:32,fontWeight:'800',lineHeight:1}}>OM</div>
+        <h1 style={{fontSize:24,fontWeight:'800',color:'#0f172a',letterSpacing:2,margin:'8px 0 0'}}>GURU JI ASTROPALM</h1>
+        <p style={{color:'#64748b',fontSize:10,fontWeight:'600',letterSpacing:3,marginTop:6}}>CHALDEAN + VEDIC + KUA NUMBER DASHBOARD</p></div></div>
+    <div style={{maxWidth:920,margin:'0 auto',padding:'0 16px'}}>
+      <div style={{display:'flex',borderBottom:'1px solid #e2e8f0',marginTop:12,overflowX:'auto',background:'#ffffff',borderRadius:'12px 12px 0 0',padding:'8px 8px 0 8px',boxShadow:'0 -2px 4px rgba(0,0,0,0.02)'}}>
+        {tabs.map(t=><button key={t.id} onClick={()=>sT(t.id)} style={{flexShrink:0,padding:'12px 16px',fontSize:13,fontWeight:600,border:'none',background:'none',cursor:'pointer',borderBottom:tab===t.id?'3px solid #d97706':'3px solid transparent',color:tab===t.id?'#d97706':'#64748b',whiteSpace:'nowrap',transition:'all 0.2s'}}>{t.icon} {t.label}</button>)}</div></div>
+    <div style={{maxWidth:920,margin:'0 auto',padding:'24px 16px'}}>
+      {tab==='personal'&&<PersonalReading/>}{tab==='baby'&&<BabyPlanner/>}{tab==='newborn'&&<NewbornAnalysis/>}{tab==='compare'&&<DateCompare/>}{tab==='names'&&<NameFinder/>}{tab==='muhurat'&&<EventMuhurat/>}{tab==='marriage'&&<MarriageCompat/>}</div>
+    <div style={{textAlign:'center',padding:24,color:'#94a3b8',fontSize:10,fontWeight:'500',borderTop:'1px solid #e2e8f0',marginTop:32}}>
+      Guru Ji AstroPalm V6 | 7 Tabs | Chaldean+Kua: 10/10 | Vedic: verify Nakshatra from Panchang | Marriage: 8.5/10 | Muhurat: 7/10</div>
+  </div>);
+}
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
