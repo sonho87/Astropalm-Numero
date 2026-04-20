@@ -1,349 +1,1114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guru Ji AstroPalm | Professional Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #0f172a; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guru Ji AstroPalm Dashboard V6</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f1f5f9;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;-webkit-font-smoothing:antialiased;}
+select option{background:#fff;color:#0f172a}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeIn .4s ease-out}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#f8fafc}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+select{-webkit-appearance:auto;appearance:auto}
+</style>
 </head>
 <body>
-    <div id="root"></div>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo}=React;
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+// ═══════ CORE DATA ═══════
+const CH={A:1,B:2,C:3,D:4,E:5,F:8,G:3,H:5,I:1,J:1,K:2,L:3,M:4,N:5,O:7,P:8,Q:1,R:2,S:3,T:4,U:6,V:6,W:6,X:5,Y:1,Z:7};
+const PN={1:"Surya (Sun)",2:"Chandra (Moon)",3:"Guru (Jupiter)",4:"Rahu",5:"Budha (Mercury)",6:"Shukra (Venus)",7:"Ketu",8:"Shani (Saturn)",9:"Kuja (Mars)"};
+const PC={1:"#d97706",2:"#64748b",3:"#eab308",4:"#475569",5:"#10b981",6:"#db2777",7:"#8b5cf6",8:"#3b82f6",9:"#ef4444"};
+const WD=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WDP={0:"Surya (Sun)",1:"Chandra (Moon)",2:"Kuja (Mars)",3:"Budha (Mercury)",4:"Guru (Jupiter)",5:"Shukra (Venus)",6:"Shani (Saturn)"};
+const WDN={0:1,1:2,2:9,3:5,4:3,5:6,6:8};
+const CO={10:"Wheel of Fortune",11:"Hidden Dangers",12:"The Sacrifice",13:"Transformation",14:"Movement & Risk",15:"The Magician",16:"The Tower",17:"The Star",18:"Spiritual Conflict",19:"The Sun — Success!",20:"The Awakening",21:"The Crown — Honor",22:"The Fool — Illusion",23:"Royal Star — Promise!",24:"Love,Money,Creativity — BEST!",25:"Strength via Experience",26:"Partnerships & Warnings",27:"The Scepter — Authority",28:"Trusting Lamb — Loss risk",29:"Grace Under Pressure",30:"The Loner",31:"The Hermit",32:"Communication Power",33:"Brilliance (=24)",34:"=25",35:"=26",36:"=27",37:"=28",38:"=29",39:"=30",40:"=31",41:"=32",42:"=24 Love,Money",43:"=25",44:"=26",45:"=27"};
+const RE={Mesha:"Aries",Vrishabha:"Taurus",Mithuna:"Gemini",Karkata:"Cancer",Simha:"Leo",Kanya:"Virgo",Tula:"Libra",Vrishchika:"Scorpio",Dhanu:"Sagittarius",Makara:"Capricorn",Kumbha:"Aquarius",Meena:"Pisces"};
+const RL={Mesha:"Kuja(Mars)",Vrishabha:"Shukra(Venus)",Mithuna:"Budha(Mercury)",Karkata:"Chandra(Moon)",Simha:"Surya(Sun)",Kanya:"Budha(Mercury)",Tula:"Shukra(Venus)",Vrishchika:"Kuja(Mars)",Dhanu:"Guru(Jupiter)",Makara:"Shani(Saturn)",Kumbha:"Shani(Saturn)",Meena:"Guru(Jupiter)"};
 
-        const CHALDEAN = {
-            A:1, I:1, J:1, Q:1, Y:1, B:2, K:2, R:2, C:3, G:3, L:3, S:3,
-            D:4, M:4, T:4, E:5, H:5, N:5, X:5, U:6, V:6, W:6, O:7, Z:7, F:8, P:8
-        };
+const NAK=[
+{n:"Ashwini",lord:"Ketu",deity:"Ashwini Kumaras",r:["Mesha","Mesha","Mesha","Mesha"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Chu","Che","Cho","La"],gana:"Deva"},
+{n:"Bharani",lord:"Shukra",deity:"Yama",r:["Mesha","Mesha","Mesha","Mesha"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Li","Lu","Le","Lo"],gana:"Manushya"},
+{n:"Krittika",lord:"Surya",deity:"Agni",r:["Mesha","Vrishabha","Vrishabha","Vrishabha"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["A","E","U","Ea"],gana:"Rakshasa"},
+{n:"Rohini",lord:"Chandra",deity:"Brahma",r:["Vrishabha","Vrishabha","Vrishabha","Vrishabha"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["O","Va","Vi","Vu"],gana:"Manushya"},
+{n:"Mrigashira",lord:"Kuja",deity:"Soma",r:["Vrishabha","Vrishabha","Mithuna","Mithuna"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Ve","Vo","Ka","Ki"],gana:"Deva"},
+{n:"Ardra",lord:"Rahu",deity:"Rudra",r:["Mithuna","Mithuna","Mithuna","Mithuna"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Ku","Gha","Ng","Chha"],gana:"Manushya"},
+{n:"Punarvasu",lord:"Guru",deity:"Aditi",r:["Mithuna","Mithuna","Mithuna","Karkata"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Ke","Ko","Ha","Hi"],gana:"Deva"},
+{n:"Pushya",lord:"Shani",deity:"Brihaspati",r:["Karkata","Karkata","Karkata","Karkata"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Hu","He","Ho","Da"],gana:"Deva"},
+{n:"Ashlesha",lord:"Budha",deity:"Naga",r:["Karkata","Karkata","Karkata","Karkata"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Di","Du","De","Do"],gana:"Rakshasa"},
+{n:"Magha",lord:"Ketu",deity:"Pitris",r:["Simha","Simha","Simha","Simha"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Ma","Mi","Mu","Me"],gana:"Rakshasa"},
+{n:"P.Phalguni",lord:"Shukra",deity:"Bhaga",r:["Simha","Simha","Simha","Simha"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Mo","Ta","Ti","Tu"],gana:"Manushya"},
+{n:"U.Phalguni",lord:"Surya",deity:"Aryaman",r:["Simha","Kanya","Kanya","Kanya"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Te","To","Pa","Pi"],gana:"Manushya"},
+{n:"Hasta",lord:"Chandra",deity:"Savitar",r:["Kanya","Kanya","Kanya","Kanya"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Pu","Sha","Na","Tha"],gana:"Deva"},
+{n:"Chitra",lord:"Kuja",deity:"Tvashtar",r:["Kanya","Kanya","Tula","Tula"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Pe","Po","Ra","Ri"],gana:"Rakshasa"},
+{n:"Swati",lord:"Rahu",deity:"Vayu",r:["Tula","Tula","Tula","Tula"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Ru","Re","Ro","Ta"],gana:"Deva"},
+{n:"Vishakha",lord:"Guru",deity:"Indra-Agni",r:["Tula","Tula","Tula","Vrishchika"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Ti","Tu","Te","To"],gana:"Rakshasa"},
+{n:"Anuradha",lord:"Shani",deity:"Mitra",r:["Vrishchika","Vrishchika","Vrishchika","Vrishchika"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Na","Ni","Nu","Ne"],gana:"Deva"},
+{n:"Jyeshtha",lord:"Budha",deity:"Indra",r:["Vrishchika","Vrishchika","Vrishchika","Vrishchika"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["No","Ya","Yi","Yu"],gana:"Rakshasa"},
+{n:"Moola",lord:"Ketu",deity:"Nirriti",r:["Dhanu","Dhanu","Dhanu","Dhanu"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Ye","Yo","Bha","Bhi"],gana:"Rakshasa"},
+{n:"P.Ashadha",lord:"Shukra",deity:"Apas",r:["Dhanu","Dhanu","Dhanu","Dhanu"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Bhu","Dha","Bhu","Dha"],gana:"Manushya"},
+{n:"U.Ashadha",lord:"Surya",deity:"Vishve Devas",r:["Dhanu","Makara","Makara","Makara"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Bhe","Bho","Ja","Ji"],gana:"Manushya"},
+{n:"Shravana",lord:"Chandra",deity:"Vishnu",r:["Makara","Makara","Makara","Makara"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Ju","Je","Jo","Gha"],gana:"Deva"},
+{n:"Dhanishta",lord:"Kuja",deity:"Vasu",r:["Makara","Makara","Kumbha","Kumbha"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Ga","Gi","Gu","Ge"],gana:"Rakshasa"},
+{n:"Shatabhisha",lord:"Rahu",deity:"Varuna",r:["Kumbha","Kumbha","Kumbha","Kumbha"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["Go","Sa","Si","Su"],gana:"Rakshasa"},
+{n:"P.Bhadrapada",lord:"Guru",deity:"Aja Ekapada",r:["Kumbha","Kumbha","Kumbha","Meena"],nav:["Mesha","Vrishabha","Mithuna","Karkata"],let:["Se","So","Da","Di"],gana:"Manushya"},
+{n:"U.Bhadrapada",lord:"Shani",deity:"Ahir Budhnya",r:["Meena","Meena","Meena","Meena"],nav:["Simha","Kanya","Tula","Vrishchika"],let:["Du","Tha","Jha","Da"],gana:"Manushya"},
+{n:"Revati",lord:"Budha",deity:"Pushan",r:["Meena","Meena","Meena","Meena"],nav:["Dhanu","Makara","Kumbha","Meena"],let:["De","Do","Cha","Chi"],gana:"Deva"},
+];
 
-        const RAHU_KAAL = { 0: "16:30-18:00", 1: "07:30-09:00", 2: "15:00-16:30", 3: "12:00-13:30", 4: "13:30-15:00", 5: "10:30-12:00", 6: "09:00-10:30" };
-        const YAMAGANDA = { 0: "12:00-13:30", 1: "10:30-12:00", 2: "09:00-10:30", 3: "07:30-09:00", 4: "06:00-07:30", 5: "15:00-16:30", 6: "13:30-15:00" };
+// ═══════ CALCULATIONS ═══════
+function cN(name){if(!name)return{t:0,r:0,c:0,l:''};const cl=name.toUpperCase().replace(/[^A-Z]/g,'');let t=0;for(const c of cl)t+=(CH[c]||0);let r=t;while(r>9)r=String(r).split('').reduce((a,b)=>a+parseInt(b),0);return{t,r,c:t>9?t:0,l:cl}}
+function cB(d){let n=d;while(n>9)n=String(n).split('').reduce((a,b)=>a+parseInt(b),0);return{r:n,c:d>9?d:0}}
+function cL(d,m,y){const s=`${d}${m}${y}`.split('').map(Number).reduce((a,b)=>a+b,0);let r=s;while(r>9)r=String(r).split('').reduce((a,b)=>a+parseInt(b),0);return{r,c:s>9?s:0}}
+function cPY(d,m,y){let s=`${d}${m}${y}`.split('').map(Number).reduce((a,b)=>a+b,0);while(s>9)s=String(s).split('').reduce((a,b)=>a+parseInt(b),0);return s}
+function cKua(yr,g){let d=String(yr).split('').map(Number);let s=d.reduce((a,b)=>a+b,0);while(s>9)s=String(s).split('').reduce((a,b)=>a+parseInt(b),0);let k;if(yr<2000){k=g==='M'?(10-s):(5+s)}else{k=g==='M'?(9-s):(6+s)};if(k===0)k=9;if(k===5)k=g==='M'?2:8;while(k>9)k=String(k).split('').reduce((a,b)=>a+parseInt(b),0);if(k===0)k=9;return k}
+// Lo Shu Grid: DOB digits + Moolank (Birth#) + Bhagyank (LifePath#) all go into grid
+function gG(day,month,year,nameNum,kuaM,kuaF){
+  // Step 1: Get all digits from full DOB, exclude 0
+  const rawDigits=`${day}${month}${year}`.split('').map(Number).filter(d=>d>0);
+  // Step 2: Calculate Moolank (Birth Number) and Bhagyank (Life Path)
+  let bn=day;while(bn>9)bn=String(bn).split('').reduce((a,b)=>a+parseInt(b),0);
+  let lpSum=`${day}${month}${year}`.split('').map(Number).reduce((a,b)=>a+b,0);
+  let lp=lpSum;while(lp>9)lp=String(lp).split('').reduce((a,b)=>a+parseInt(b),0);
+  // Step 3: Combine all — DOB digits + Moolank + Bhagyank
+  const allDigits=[...rawDigits];
+  if(bn>0)allDigits.push(bn);
+  if(lp>0)allDigits.push(lp);
+  // Step 4: Count occurrences in each box (1-9)
+  const counts={};for(let i=1;i<=9;i++)counts[i]=0;
+  allDigits.forEach(d=>{if(d>=1&&d<=9)counts[d]++});
+  const present=[];const missing=[];
+  for(let i=1;i<=9;i++){if(counts[i]>0)present.push(i);else missing.push(i)}
+  return{counts,present,missing,birthNum:bn,lifeP:lp,nameNum:nameNum||0,kuaM:kuaM||0,kuaF:kuaF||0,digits:rawDigits,allDigits}
+}
+function gF(a,b){const f={1:[1,2,3,9],2:[2,1,3,6],3:[3,1,2,9],4:[4,5,6,7],5:[5,1,4,6],6:[6,2,5,8],7:[7,4,8,2],8:[8,3,6,5],9:[9,1,3,5]};const e={1:[4,8],2:[4,8],3:[6],4:[1,2,9],5:[2],6:[3],7:[1,9],8:[1,2,4],9:[4,7]};if(a===b)return"Same";if(f[a]?.includes(b))return"Friendly";if(e[a]?.includes(b))return"Hostile";return"Neutral"}
+const KE={1:"Water",2:"Earth",3:"Wood",4:"Wood",6:"Metal",7:"Metal",8:"Earth",9:"Fire"};
+const KD={1:"North",2:"SW",3:"East",4:"SE",6:"NW",7:"West",8:"NE",9:"South"};
+const KG={east:[1,3,4,9],west:[2,6,7,8]};
 
-        const calculateChaldean = (name) => {
-            if (!name) return 0;
-            return name.toUpperCase().split('').reduce((sum, char) => sum + (CHALDEAN[char] || 0), 0);
-        };
+function getNakLordNum(lord){return lord==='Shukra'?6:lord==='Kuja'?9:lord==='Guru'?3:lord==='Shani'?8:lord==='Budha'?5:lord==='Surya'?1:lord==='Chandra'?2:lord==='Rahu'?4:7}
 
-        const reduceToSingleDigit = (num) => {
-            if (!num) return 0;
-            while (num > 9) num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-            return num;
-        };
+function getInsights(ni){
+  if(!ni)return null;const pos=[],neg=[],cau=[];
+  const nL=ni.lord,nv=ni.navamsha;
+  if(nL==='Shukra')pos.push("Nak Lord Venus = artistic talent, beauty, charm");
+  if(nL==='Kuja')pos.push("Nak Lord Mars = courage, energy, competitive spirit");
+  if(nL==='Guru')pos.push("Nak Lord Jupiter = wisdom, fortune, teaching ability");
+  if(nL==='Shani')pos.push("Nak Lord Saturn = discipline, endurance, mastery");
+  if(nL==='Budha')pos.push("Nak Lord Mercury = intelligence, communication, versatility");
+  if(nL==='Surya')pos.push("Nak Lord Sun = authority, leadership, confidence");
+  if(nL==='Chandra')pos.push("Nak Lord Moon = intuition, nurturing, public appeal");
+  if(nL==='Rahu')pos.push("Nak Lord Rahu = unconventional success, mass appeal");
+  if(nL==='Ketu')pos.push("Nak Lord Ketu = spiritual depth, healing ability, intuition");
+  if(nv==='Tula'){pos.push("Nav Tula = harmonious soul, aesthetic sense, diplomatic");neg.push("Can be indecisive, approval-seeking")}
+  if(nv==='Mesha'){pos.push("Nav Mesha = courageous, pioneering, bold");neg.push("Can be impulsive, aggressive")}
+  if(nv==='Vrishabha'){pos.push("Nav Vrishabha = grounded, beautiful, materially secure");neg.push("Can be stubborn, possessive")}
+  if(nv==='Mithuna'){pos.push("Nav Mithuna = communicative, versatile, quick-witted");neg.push("Can be scattered, restless")}
+  if(nv==='Karkata'){pos.push("Nav Karkata = nurturing, emotionally deep, protective");neg.push("Can be moody, clingy")}
+  if(nv==='Simha'){pos.push("Nav Simha = royal presence, natural performer");neg.push("Can be ego-driven, dominating")}
+  if(nv==='Kanya'){pos.push("Nav Kanya = analytical, detail-oriented, practical");neg.push("Can be overly critical, anxious")}
+  if(nv==='Vrishchika'){pos.push("Nav Vrishchika = intense, transformative, powerful");neg.push("Can be secretive, jealous")}
+  if(nv==='Dhanu'){pos.push("Nav Dhanu = philosophical, optimistic, adventurous");neg.push("Can be preachy, over-promising")}
+  if(nv==='Makara'){pos.push("Nav Makara = disciplined, ambitious, patient");neg.push("Can be pessimistic, emotionally cold")}
+  if(nv==='Kumbha'){pos.push("Nav Kumbha = innovative, humanitarian, unique");neg.push("Can be detached, eccentric")}
+  if(nv==='Meena'){pos.push("Nav Meena = spiritual, compassionate, imaginative");neg.push("Can be escapist, confused")}
+  if(ni.gana==='Deva')pos.push("Deva Gana = divine, gentle temperament");
+  if(ni.gana==='Manushya')pos.push("Manushya Gana = balanced, practical temperament");
+  if(ni.gana==='Rakshasa'){pos.push("Rakshasa Gana = powerful, self-reliant");neg.push("Rakshasa Gana may clash with Deva family")}
+  if(nL==='Ketu')cau.push("Ketu lord = identity confusion in teens. Needs grounding.");
+  if(nL==='Rahu')cau.push("Rahu lord = watch obsessive tendencies.");
+  if(nL==='Shani')cau.push("Saturn lord = delays early. Patience required. Results after 30.");
+  if(nv==='Vrishchika')cau.push("Scorpio Nav = emotional intensity needs healthy outlet.");
+  cau.push("Verify Moon Nakshatra with Jyotishi for 10/10 accuracy.");
+  return{pos,neg,cau};
+}
 
-        const generateLoShu = (dobStr, moolank, bhagyank) => {
-            if (!dobStr) return [];
-            const digits = dobStr.replace(/\D/g, '').split('').map(Number).filter(n => n !== 0);
-            digits.push(moolank, bhagyank);
-            return digits;
-        };
+function getPI(pd,bb,bl,ni){
+  if(!pd)return[];const pts=[];
+  const bc=gF(pd.b.r,bb.r),lc=gF(pd.lp.r,bl.r);
+  if(bc==='Same')pts.push({t:'pos',x:`Birth SAME (${pd.b.r}) = deep karmic bond. Intuitive understanding.`});
+  if(bc==='Friendly')pts.push({t:'pos',x:`Birth ${pd.b.r}+${bb.r} = Friendly. Natural daily harmony.`});
+  if(bc==='Hostile')pts.push({t:'neg',x:`Birth ${pd.b.r}+${bb.r} = Hostile. Temperament friction. Needs effort.`});
+  if(lc==='Same')pts.push({t:'pos',x:`Life Paths SAME (${pd.lp.r}) = shared destiny road.`});
+  if(lc==='Friendly')pts.push({t:'pos',x:`LP ${pd.lp.r}+${bl.r} = Friendly. Destiny paths support each other.`});
+  if(lc==='Hostile')pts.push({t:'neg',x:`LP ${pd.lp.r}+${bl.r} = Hostile. Different life directions.`});
+  if(pd.b.r===bl.r)pts.push({t:'pos',x:`Parent Birth=${pd.b.r} matches Child LP=${bl.r}. Deep guidance potential.`});
+  if(pd.lp.r===bb.r)pts.push({t:'pos',x:`Parent LP=${pd.lp.r} matches Child Birth=${bb.r}. Destiny supports child.`});
+  if(pd.n){const nc=gF(pd.n.r,bb.r);if(nc==='Friendly'||nc==='Same')pts.push({t:'pos',x:`Parent name(${pd.n.r}) ${nc} with baby Birth(${bb.r}). Name vibration supports child.`});
+  if(nc==='Hostile')pts.push({t:'neg',x:`Parent name(${pd.n.r}) Hostile with baby Birth(${bb.r}). Consider daily name adjustment.`})}
+  if(ni){const nv=ni.navLord;if(nv?.includes('Venus'))pts.push({t:'pos',x:`Venus Nav child = brings beauty, harmony, financial luck to family.`});
+  if(nv?.includes('Saturn'))pts.push({t:'neu',x:`Saturn Nav child = brings responsibility, maturation. Growth through duty.`});
+  if(nv?.includes('Mars'))pts.push({t:'neu',x:`Mars Nav child = brings energy and drive. Can be demanding but motivating.`});
+  if(nv?.includes('Jupiter'))pts.push({t:'pos',x:`Jupiter Nav child = brings wisdom, spiritual growth, fortune expansion.`})}
+  return pts;
+}
 
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('profile');
+// ═══════ PREMIUM STYLES ═══════
+const IS={width:'100%',background:'#f8fafc',border:'1px solid #cbd5e1',borderRadius:8,padding:'10px 12px',color:'#0f172a',fontSize:13,outline:'none',boxSizing:'border-box',transition:'all 0.2s'};
+const SS={width:'100%',background:'#f8fafc',border:'1px solid #cbd5e1',borderRadius:8,padding:'10px 12px',color:'#0f172a',fontSize:13,outline:'none',boxSizing:'border-box',appearance:'auto',WebkitAppearance:'auto',transition:'all 0.2s'};
+const BS={width:'100%',background:'linear-gradient(135deg,#0f172a,#1e293b)',color:'#ffffff',fontWeight:'600',padding:'12px',borderRadius:8,border:'none',cursor:'pointer',fontSize:14,letterSpacing:0.3,transition:'all 0.2s',boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'};
+const CS={background:'#ffffff',borderRadius:12,padding:20,border:'1px solid #e2e8f0',boxShadow:'0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)'};
 
-            const [dob, setDob] = useState(() => localStorage.getItem('gp_dob') || "");
-            const [rashi, setRashi] = useState(() => localStorage.getItem('gp_rashi') || "Scorpio");
-            const [nakshatra, setNakshatra] = useState(() => localStorage.getItem('gp_nakshatra') || "Anuradha");
-            const [firstName, setFirstName] = useState(() => localStorage.getItem('gp_first') || "");
-            const [lastName, setLastName] = useState(() => localStorage.getItem('gp_last') || "");
-            
-            // State for Name Comparison Tab
-            const [savedNames, setSavedNames] = useState(() => JSON.parse(localStorage.getItem('gp_saved_names')) || []);
+// ─── PDF Download function (robust) ───
+function downloadPDF(elementId,filename){
+  const el=document.getElementById(elementId);
+  if(!el){alert('Please generate the report first, then download.');return;}
+  const {jsPDF}=window.jspdf;
+  if(!jsPDF){alert('PDF library not loaded. Check internet connection.');return;}
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=210,ph=297,ml=15,tw=180,lh=5.8;
+  let y=22;
+  const AMBER=[217,119,6];const DARK=[15,23,42];const GREY=[100,116,139];
+  const GREEN=[5,150,105];const RED=[220,38,38];const BLUE=[37,99,235];
+  const LGREY=[241,245,249];const WHITE=[255,255,255];
+  function drawHdr(){
+    doc.setFillColor(...DARK);doc.rect(0,0,pw,14,'F');
+    doc.setTextColor(...AMBER);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('GURU JI ASTROPALM',pw/2,9,{align:'center'});
+    doc.setTextColor(...GREY);doc.setFontSize(6);doc.setFont('helvetica','normal');
+    doc.text('CHALDEAN + VEDIC + KUA ANALYSIS',pw/2,13,{align:'center'});
+  }
+  function checkY(n){if(y+n>ph-14){doc.addPage();y=22;drawHdr();}}
+  drawHdr();
+  const seen=new Set();const lines=[];
+  function walk(node){
+    if(!node)return;
+    const tag=node.tagName?.toLowerCase();
+    if(['script','style','button','a'].includes(tag))return;
+    try{const cs=window.getComputedStyle(node);if(cs&&(cs.display==='none'||cs.visibility==='hidden'))return;}catch(e){}
+    if(node.nodeType===3){
+      const t=(node.textContent||'').trim();
+      if(t.length<2||seen.has(t))return;
+      seen.add(t);
+      const p=node.parentElement;
+      let fs=11,fw='400',col='';
+      try{const pcs=p?window.getComputedStyle(p):null;if(pcs){fs=parseFloat(pcs.fontSize)||11;fw=pcs.fontWeight||'400';col=pcs.color||'';}}catch(e){}
+      const isBold=fw==='700'||fw==='bold'||parseInt(fw)>=700||fw==='600'||parseInt(fw)>=600;
+      const isGreen=col.includes('22, 101')||col.includes('5, 150')||col.includes('16, 185');
+      const isRed=col.includes('153, 27')||col.includes('220, 38');
+      const isAmber=col.includes('139, 105')||col.includes('217, 119')||col.includes('245, 158');
+      const isBlue=col.includes('29, 78')||col.includes('37, 99');
+      lines.push({text:t,fs,isBold,isGreen,isRed,isAmber,isBlue});
+    }else{node.childNodes.forEach(c=>walk(c));}
+  }
+  walk(el);
+  lines.forEach((l,i)=>{
+    if(!l.text||l.text.length<2)return;
+    const t=l.text;
+    if(l.fs>=15||(l.isBold&&l.fs>=13)){
+      checkY(14);if(i>0)y+=2;
+      doc.setFillColor(...LGREY);doc.roundedRect(ml,y-5,tw,8,2,2,'F');
+      doc.setTextColor(...DARK);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text(t.length>85?t.slice(0,85)+'…':t,ml+3,y,{maxWidth:tw-4});
+      y+=6;doc.setDrawColor(...AMBER);doc.setLineWidth(0.3);doc.line(ml,y,ml+tw,y);y+=4;
+    }else if(l.isBold&&l.fs>=11){
+      checkY(10);y+=1;
+      doc.setTextColor(...DARK);doc.setFontSize(9);doc.setFont('helvetica','bold');
+      doc.text(t.length>95?t.slice(0,95)+'…':t,ml,y,{maxWidth:tw});y+=lh+1;
+    }else{
+      checkY(7);
+      if(l.isGreen){doc.setTextColor(...GREEN);doc.setFont('helvetica','normal');}
+      else if(l.isRed){doc.setTextColor(...RED);doc.setFont('helvetica','normal');}
+      else if(l.isAmber){doc.setTextColor(...AMBER);doc.setFont('helvetica','italic');}
+      else if(l.isBlue){doc.setTextColor(...BLUE);doc.setFont('helvetica','normal');}
+      else{doc.setTextColor(...GREY);doc.setFont('helvetica','normal');}
+      doc.setFontSize(8);
+      const pfx=l.isGreen?'❖ ':l.isRed?'▸ ':l.isAmber?'◉ ':'  ';
+      const wrapped=doc.splitTextToSize(pfx+(t.length>150?t.slice(0,150)+'…':t),tw-4);
+      wrapped.forEach(line=>{checkY(6);doc.text(line,ml+2,y);y+=lh;});
+    }
+  });
+  const n=doc.internal.getNumberOfPages();
+  for(let i=1;i<=n;i++){
+    doc.setPage(i);doc.setFillColor(...LGREY);doc.rect(0,ph-10,pw,10,'F');
+    doc.setTextColor(...GREY);doc.setFontSize(6);doc.setFont('helvetica','normal');
+    doc.text('Guru Ji AstroPalm | Chaldean: 10/10 mathematical | Vedic: verify Nakshatra with Panchang',pw/2,ph-5,{align:'center'});
+    doc.text(i+'/'+n,pw-ml,ph-5,{align:'right'});
+    doc.text(new Date().toLocaleDateString('en-IN'),ml,ph-5);
+  }
+  doc.save(filename||'AstroPalm_Report.pdf');
+}
 
-            useEffect(() => {
-                localStorage.setItem('gp_dob', dob);
-                localStorage.setItem('gp_rashi', rashi);
-                localStorage.setItem('gp_nakshatra', nakshatra);
-                localStorage.setItem('gp_first', firstName);
-                localStorage.setItem('gp_last', lastName);
-                localStorage.setItem('gp_saved_names', JSON.stringify(savedNames));
-            }, [dob, rashi, nakshatra, firstName, lastName, savedNames]);
+function PDFBtn({targetId,filename}){
+  return(<button onClick={()=>downloadPDF(targetId,filename)}
+    style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+      background:'linear-gradient(135deg,#0f172a,#1e293b)',color:'#ffffff',
+      border:'none',borderRadius:8,padding:'12px 20px',cursor:'pointer',
+      fontSize:13,fontWeight:'600',margin:'16px auto 0',letterSpacing:0.3,boxShadow:'0 4px 6px -1px rgba(0,0,0,0.1)'}}>
+    <span style={{fontSize:16}}>📄</span> Download PDF Report
+  </button>);
+}
 
-            let moolank = 0, bhagyank = 0, gridNumbers = [], missingNumbers = [1,2,3,4,5,6,7,8,9];
-            if (dob) {
-                const dateParts = dob.split('-');
-                if(dateParts.length === 3) {
-                    moolank = reduceToSingleDigit(parseInt(dateParts[2]));
-                    bhagyank = reduceToSingleDigit(dateParts.join('').split('').reduce((sum, d) => sum + parseInt(d), 0));
-                    gridNumbers = generateLoShu(dob, moolank, bhagyank);
-                    missingNumbers = [1,2,3,4,5,6,7,8,9].filter(n => !gridNumbers.includes(n));
-                }
-            }
+// ─── Date Dropdowns Component ───
+function DateDropdowns({day,setDay,month,setMonth,year,setYear,yearStart,yearEnd,label}){
+  const ys=yearStart||1940;const ye=yearEnd||2030;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const maxD=month?new Date(parseInt(year)||2026,parseInt(month),0).getDate():31;
+  return(<div>
+    {label&&<label style={{fontSize:10,color:'#64748b',fontWeight:'500',display:'block',marginBottom:4}}>{label}</label>}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1.2fr 1fr',gap:6}}>
+      <select style={SS} value={day} onChange={e=>setDay(e.target.value)}>
+        <option value="">Day</option>
+        {Array.from({length:maxD},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}</option>)}
+      </select>
+      <select style={SS} value={month} onChange={e=>setMonth(e.target.value)}>
+        <option value="">Month</option>
+        {months.map((m,i)=><option key={i} value={i+1}>{m} ({i+1})</option>)}
+      </select>
+      <select style={SS} value={year} onChange={e=>setYear(e.target.value)}>
+        <option value="">Year</option>
+        {Array.from({length:ye-ys+1},(_,i)=>ye-i).map(y=><option key={y} value={y}>{y}</option>)}
+      </select>
+    </div>
+  </div>);
+}
 
-            const firstTotal = calculateChaldean(firstName);
-            const firstReduced = reduceToSingleDigit(firstTotal);
-            const lastTotal = calculateChaldean(lastName);
-            const fullTotal = firstTotal + lastTotal;
-            const fullReduced = reduceToSingleDigit(fullTotal);
-            const isMarsRuled = rashi === "Aries" || rashi === "Scorpio";
+function SmallDateDropdowns({day,setDay,month,setMonth,year,setYear}){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const sIS={...SS,fontSize:11,padding:'8px 6px'};
+  return(<div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4}}>
+    <select style={sIS} value={day} onChange={e=>setDay(e.target.value)}>
+      <option value="">DD</option>{Array.from({length:31},(_,i)=>i+1).map(d=><option key={d} value={d}>{d}</option>)}
+    </select>
+    <select style={sIS} value={month} onChange={e=>setMonth(e.target.value)}>
+      <option value="">MM</option>{months.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
+    </select>
+    <select style={sIS} value={year} onChange={e=>setYear(e.target.value)}>
+      <option value="">YYYY</option>{Array.from({length:91},(_,i)=>2030-i).map(y=><option key={y} value={y}>{y}</option>)}
+    </select>
+  </div>);
+}
 
-            const addNameToComparison = () => {
-                if(!firstName) return;
-                const newEntry = {
-                    id: Date.now(),
-                    first: firstName.toUpperCase(),
-                    last: lastName.toUpperCase(),
-                    firstT: firstTotal,
-                    firstR: firstReduced,
-                    fullT: fullTotal,
-                    fullR: fullReduced
-                };
-                setSavedNames([...savedNames, newEntry]);
-            };
+// ═══════ SHARED COMPONENTS ═══════
+function Grid({day,month,year,nameNum,kuaM,kuaF,title}){
+  const g=gG(day,month,year,nameNum,kuaM,kuaF);
+  const loShuOrder=[4,9,2,3,5,7,8,1,6];
+  return(<div style={{background:'#f8fafc',borderRadius:12,padding:16,border:'1px solid #e2e8f0',boxShadow:'0 2px 4px rgba(0,0,0,0.02)'}}>
+    <h4 style={{color:'#d97706',fontSize:13,fontWeight:'700',textAlign:'center',marginBottom:2,letterSpacing:0.5}}>LO-SHU GRID</h4>
+    <div style={{fontSize:10,color:'#64748b',textAlign:'center',marginBottom:4}}>{title||""}</div>
+    <div style={{fontSize:10,fontWeight:'500',color:'#475569',textAlign:'center',marginBottom:8}}>
+      DOB: {day}/{month}/{year} | Moolank: {g.birthNum} | Bhagyank: {g.lifeP}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6,maxWidth:280,margin:'0 auto'}}>
+      {loShuOrder.map(num=>{
+        const cnt=g.counts[num]||0;
+        const isFromDOB=cnt>0;
+        const isName=num===g.nameNum&&!isFromDOB;
+        const isKuaM=num===g.kuaM&&!isFromDOB&&!isName;
+        const isKuaF=num===g.kuaF&&!isFromDOB&&!isName;
+        const isFilled=isFromDOB||isName||isKuaM||isKuaF;
+        const numStr=isFromDOB?String(num).repeat(cnt):'';
+        return(
+        <div key={num} style={{position:'relative',borderRadius:8,padding:8,textAlign:'center',minHeight:60,
+          display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',
+          background:isFromDOB?'linear-gradient(135deg,#f59e0b,#d97706)':isName?'linear-gradient(135deg,#db2777,#be185d)':
+          (isKuaM||isKuaF)?'linear-gradient(135deg,#8b5cf6,#6d28d9)':'#f1f5f9',
+          opacity:isFilled?1:0.6,transition:'all .3s',
+          border:isFilled?'1px solid rgba(255,255,255,0.2)':'1px solid #e2e8f0',
+          boxShadow:isFromDOB?'0 2px 8px rgba(245,158,11,0.25)':'none'}}>
+          {isFromDOB&&<div style={{fontSize:cnt>2?15:cnt>1?17:22,fontWeight:'800',color:'#ffffff',letterSpacing:cnt>1?2:0}}>{numStr}</div>}
+          {!isFromDOB&&<div style={{fontSize:18,fontWeight:'700',color:isFilled?'#fff':'#94a3b8'}}>{num}</div>}
+          <div style={{fontSize:8,fontWeight:'500',color:isFilled?'rgba(255,255,255,0.8)':'#94a3b8',marginTop:1}}>{PN[num]?.split('(')[0]}</div>
+          {isName&&<span style={{position:'absolute',top:2,right:2,fontSize:7,fontWeight:'600',background:'#ffffff',color:'#db2777',padding:'1px 4px',borderRadius:4}}>Name</span>}
+          {(isKuaM||isKuaF)&&<span style={{position:'absolute',top:2,left:2,fontSize:7,fontWeight:'600',background:'#ffffff',color:'#7c3aed',padding:'1px 4px',borderRadius:4}}>Kua</span>}
+        </div>)})}
+    </div>
+    <div style={{display:'flex',gap:8,marginTop:12,fontSize:10,fontWeight:'500',color:'#64748b',justifyContent:'center',flexWrap:'wrap'}}>
+      <span><span style={{display:'inline-block',width:10,height:10,background:'linear-gradient(135deg,#f59e0b,#d97706)',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>Present</span>
+      {g.nameNum>0&&<span><span style={{display:'inline-block',width:10,height:10,background:'#db2777',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>Name fills gap</span>}
+      {(g.kuaM>0||g.kuaF>0)&&<span><span style={{display:'inline-block',width:10,height:10,background:'#7c3aed',borderRadius:3,marginRight:4,verticalAlign:'middle'}}></span>Kua fills gap</span>}
+    </div>
+    {g.kuaM>0&&<div style={{marginTop:8,fontSize:11,color:'#6d28d9',fontWeight:'500',textAlign:'center'}}>
+      Kua(Boy): <b>{g.kuaM}</b> ({PN[g.kuaM]?.split('(')[0]}) {!g.present.includes(g.kuaM)?'— fills missing!':'— already present'}
+      {g.kuaF>0&&g.kuaF!==g.kuaM&&<span> | Kua(Girl): <b>{g.kuaF}</b> ({PN[g.kuaF]?.split('(')[0]}) {!g.present.includes(g.kuaF)?'— fills missing!':'— already present'}</span>}
+    </div>}
+    {g.missing.length>0&&<div style={{marginTop:6,fontSize:11,color:'#475569',textAlign:'center'}}><b style={{color:'#dc2626'}}>Missing: </b>{g.missing.map(n=>`${n}(${PN[n]?.split('(')[0]})`).join(', ')}</div>}
+    {g.nameNum>0&&g.missing.includes(g.nameNum)&&<div style={{marginTop:4,fontSize:11,fontWeight:'600',color:'#059669',textAlign:'center'}}>Name #{g.nameNum} fills a missing number!</div>}
+    {g.nameNum>0&&!g.missing.includes(g.nameNum)&&g.nameNum>0&&<div style={{marginTop:4,fontSize:11,color:'#d97706',textAlign:'center'}}>Name #{g.nameNum} overlaps — doesn't fill a gap</div>}
+  </div>);
+}
 
-            const removeName = (id) => {
-                setSavedNames(savedNames.filter(n => n.id !== id));
-            };
+function NC({label,value,compound}){
+  if(value==='?')return(<div style={{background:'#ffffff',borderRadius:10,padding:14,border:'1px solid #e2e8f0',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,0.02)'}}>
+    <div style={{fontSize:10,fontWeight:'600',color:'#64748b',textTransform:'uppercase',letterSpacing:0.5}}>{label}</div><div style={{fontSize:32,fontWeight:'800',color:'#cbd5e1'}}>?</div></div>);
+  return(<div style={{background:'#ffffff',borderRadius:10,padding:14,border:'1px solid #e2e8f0',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,0.02)'}}>
+    <div style={{fontSize:10,fontWeight:'600',color:'#64748b',textTransform:'uppercase',letterSpacing:0.5}}>{label}</div>
+    <div style={{fontSize:36,fontWeight:'800',color:PC[value],marginTop:2}}>{value}</div>
+    <div style={{fontSize:11,fontWeight:'500',color:PC[value],marginTop:2}}>{PN[value]}</div>
+    {compound>9&&<div style={{marginTop:6,fontSize:9,fontWeight:'500',color:'#475569',background:'#f1f5f9',borderRadius:6,padding:'4px 6px'}}>#{compound}: {CO[compound]||CO[Math.min(compound,45)]||""}</div>}
+  </div>);
+}
 
-            const generatePDF = () => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(20);
-                doc.text("GURU JI ASTROPALM", 20, 20);
-                doc.setFontSize(12);
-                doc.text(`DOB: ${dob} | Moolank: ${moolank} | Bhagyank: ${bhagyank}`, 20, 35);
-                
-                const AMBER = [245, 158, 11];
-                const LGREY = [148, 163, 184];
-                let yPos = 55;
-                
-                [1,2,3,4,5,6,7,8,9].forEach((num, index) => {
-                    const present = gridNumbers.includes(num);
-                    doc.setTextColor(...(present ? AMBER : LGREY));
-                    doc.text(`Grid ${num}: ${present ? "Present" : "Missing"}`, 20, yPos + (index * 7));
-                });
-                
-                doc.setTextColor(0,0,0);
-                doc.save("AstroPalm_Report.pdf");
-            };
+function HB({n1,n2,l1,l2}){const r=gF(n1,n2);const c={Friendly:'#059669',Hostile:'#dc2626',Neutral:'#d97706',Same:'#2563eb'};
+  return(<div style={{borderRadius:8,padding:'6px 8px',textAlign:'center',fontSize:10,background:`${c[r]}10`,color:c[r],border:`1px solid ${c[r]}30`}}>
+    <div style={{fontWeight:'700',marginBottom:2}}>{l1}{n1} + {l2}{n2}</div><div style={{fontWeight:'500'}}>{r}</div></div>);
+}
 
-            const NavItem = ({ id, label }) => (
-                <button 
-                    onClick={() => setActiveTab(id)}
-                    className={`px-4 py-3 text-sm font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === id ? 'border-amber-500 text-amber-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
-                >
-                    {label}
-                </button>
-            );
+// ═══════ TAB 1: PERSONAL READING ═══════
+const MOOLANK_DEEP={
+  1:{title:"Surya (Sun) — The Leader",core:["Natural born leader — you take charge instinctively, often without realising it","Strong willpower and independence — you resist being controlled or told what to do","Highly confident externally, but sensitive to ego wounds internally","Pioneer mindset — you prefer starting things rather than maintaining them","Direct, honest, sometimes blunt in communication — you say what you mean","Strong sense of self-identity — you know who you are even when others don't"],strength:["Leadership ability that others naturally follow","Ability to start ventures from scratch and push through obstacles","Strong recovery — you bounce back from failure faster than most","Integrity and directness that earns long-term trust"],weakness:["Stubbornness — once decided, very hard to change your mind","Ego sensitivity — criticism feels personal even when it is not","Impatience with slower people or processes","Can be domineering in relationships without realising"],relation:"You need an equal partner — someone strong enough to match you but wise enough not to compete with you. Submission bores you. Aggression repels you. You want respect, not just love.",finance:"Natural ability to earn through independent ventures. Struggle working under someone else for long. Best as entrepreneur, leader, or head of department. Money comes but ego-driven decisions can waste it.",health:"Prone to heart, eye, and blood pressure issues. Head-related concerns. Sunday fasting and Surya Namaskar strengthen your ruling planet.",famous:"Mahatma Gandhi (Moolank 2 but LP 1 — destiny 1), born on 1s: Many military generals, politicians, CEOs"},
+  2:{title:"Chandra (Moon) — The Intuitive",core:["Deeply intuitive and emotionally sensitive — you pick up what others feel without words","Natural nurturer — you give more than you take in relationships","Highly imaginative and creative — your mind works in feelings and images, not logic","Mood cycles like the Moon — highs and lows that others may not understand","Strong memory — you remember emotions and conversations from years ago","Public appeal — people feel safe and comfortable around you"],strength:["Extraordinary empathy that makes you an excellent counselor, healer, or teacher","Creative talent that flows naturally — writing, music, art, design","Ability to read situations and people with uncanny accuracy","Loyalty and depth in relationships — you do not abandon people easily"],weakness:["Over-sensitivity — take things to heart that were not meant personally","Indecisiveness — too aware of all sides, struggle to commit","Mood dependency — your productivity fluctuates with emotional state","Over-attachment — struggle to let go of people, relationships, or past"],relation:"You need emotional security above all. You cannot function in a relationship where feelings are dismissed. You give everything but need reassurance in return. Partnership with a grounded, stable person works best.",finance:"Income through public-facing work, creative fields, hospitality, or care professions. Financial fluctuations mirror your emotional state. Stability comes when emotions are stable. Monday fasting enhances Chandra's blessings.",health:"Prone to hormonal imbalances, digestive issues, lung concerns, and anxiety. Emotional wellbeing directly affects physical health. Water intake, Moon rituals on Monday, and creative outlets are protective.",famous:"Moon-dominant personalities — artists, healers, public figures with mass appeal"},
+  3:{title:"Guru (Jupiter) — The Teacher",core:["Natural teacher and mentor — knowledge flows through you to others","Optimistic and expansive — you see possibility where others see limitation","Highly philosophical — you think about the bigger picture, meaning, purpose","Generous to a fault — you give freely and sometimes more than you should","Strong ethical code — you dislike dishonesty and injustice deeply","Multiple interests — you want to know everything about everything"],strength:["Wisdom that comes from both learning and experience","Ability to inspire and motivate others naturally","Financial luck through Jupiter's blessings — opportunities come","Teaching, advisory, and counseling abilities that benefit others"],weakness:["Overconfidence — can overestimate your abilities or luck","Scattered focus — too many interests, too many projects simultaneously","Preachiness — tendency to over-advise when people just want to be heard","Excess — tendency toward overindulgence in food, comfort, spending"],relation:"You need an intellectually stimulating partner. Shallow or dishonest people bore and repel you. You want to grow with your partner — a stagnant relationship drains you. You are generous but need appreciation.",finance:"Financial blessings through Jupiter — especially after age 30. Advisory, teaching, banking, law, and consulting are your wealth zones. Avoid speculative investments — your luck is in knowledge, not gambling.",health:"Prone to liver, weight, and digestive issues. Jupiter governs expansion — excess in all forms. Thursday fasting and banana offering to Jupiter protects health.",famous:"Jupiter-dominant people — philosophers, teachers, lawyers, spiritual leaders, bankers"},
+  4:{title:"Rahu — The Unconventional",core:["Unique, unconventional thinker — you do not fit standard categories","Driven by obsession — when you want something, nothing stops you","Highly ambitious — you aim for what others consider impossible","Drawn to the hidden, unusual, or taboo — technology, occult, foreign lands","Restless nature — always seeking, always moving toward the next goal","Strong karmic energy — life feels more dramatic and intense than others"],strength:["Ability to break conventions and create new paths","Technological aptitude and affinity for modern fields","Magnetic personality that attracts mass following","Resilience — Rahu people recover from catastrophic losses and rebuild"],weakness:["Obsessive behaviour — can fixate unhealthily on goals or people","Impulsiveness — acts first, thinks later","Tendency toward deception or being deceived — Rahu blurs reality","Instability — life changes dramatically and repeatedly"],relation:"You attract intense, karmic relationships — not always healthy. You need someone grounded enough to anchor you. Avoid relationships built on obsession or control dynamics.",finance:"Foreign income, technology, speculation, mass media, or unconventional business. Financial swings — big gains and big losses. Must develop financial discipline as Rahu amplifies both fortune and recklessness.",health:"Prone to mysterious or difficult-to-diagnose conditions, skin issues, phobias, and mental restlessness. Meditation, Rahu mantra on Saturdays, and avoiding intoxicants are protective.",famous:"Rahu-influenced people — tech entrepreneurs, revolutionaries, mass media figures, occultists"},
+  5:{title:"Budha (Mercury) — The Communicator",core:["Quick intellect — you grasp concepts faster than most people in the room","Natural communicator — writing, speaking, teaching, selling come effortlessly","Versatile and adaptable — you can do many things well simultaneously","Restless mind — always thinking, analysing, processing, rarely fully still","Wit and humour — you can make almost any situation lighter","Commercially minded — you understand markets, exchanges, and negotiation instinctively"],strength:["Communication skills that open doors others cannot","Ability to handle multiple roles, projects, and relationships simultaneously","Business acumen and market understanding","Adaptability — you survive change better than almost any other number"],weakness:["Scattered energy — too many things at once, few completed deeply","Nervousness and anxiety when overstimulated","Can be superficial — breadth over depth","Restlessness in relationships — boredom is your enemy"],relation:"You need mental stimulation — a partner who can match your speed and variety. Slow, heavy, or needy partners drain you quickly. Intellectual connection is as important as emotional or physical.",finance:"Trading, media, communication, education, business, and travel industries are your wealth zones. Multiple income streams work better than one salary. Wednesday fasting and Budha mantras enhance commercial luck.",health:"Prone to nervous system issues, anxiety, respiratory concerns, and skin conditions. Mercury rules nerves — overstimulation is the primary health risk. Regular meditation and reducing screen time are protective.",famous:"Mercury-dominant people — journalists, traders, writers, salespeople, comedians, teachers"},
+  6:{title:"Shukra (Venus) — The Creator",core:["Naturally artistic and aesthetic — you see beauty where others see nothing","Magnetic and charming — people are drawn to you effortlessly","Deep need for harmony and comfort — conflict and ugliness genuinely distress you","Relationship-oriented — love, partnership, and connection are central to your life","Material appreciation — you understand quality and are drawn to luxury","Generous and sensual — you experience life through the senses fully"],strength:["Creative talent in arts, design, music, fashion, or beauty","Ability to create harmony in environments and between people","Strong magnetism that attracts opportunities and people naturally","Financial luck through Venus — especially in beauty, luxury, or creative fields"],weakness:["Over-dependence on relationships for self-worth","Avoidance of conflict to a degree that allows problems to fester","Tendency toward indulgence — comfort, spending, pleasure","People-pleasing that masks real feelings"],relation:"Love is not optional for you — it is essential. You need deep, beautiful, harmonious partnership. You give enormously in relationships and need equivalent care in return. Do not settle for less.",finance:"Wealth through Venus-ruled fields — arts, entertainment, beauty, luxury, fashion, hospitality. Friday is your power day. Shukra mantra and keeping your space beautiful and harmonious enhances financial luck.",health:"Prone to kidney, reproductive system, throat, and hormonal issues. Venus governs sweetness — watch sugar intake and indulgent lifestyle. Keeping surroundings beautiful actually protects health.",famous:"Venus people — artists, musicians, designers, actors, luxury brand founders"},
+  7:{title:"Ketu — The Seeker",core:["Deeply introspective — you live more inside your mind than in the outer world","Spiritual and philosophical by nature — material pursuits rarely satisfy you fully","Highly intuitive, almost psychic — you know things without being told","Independent and solitary — you need significant alone time to recharge","Analytical and research-oriented — you dig deep, not wide","Past-life wisdom — you often feel older than your years, like you have been here before"],strength:["Extraordinary depth of analysis and research ability","Intuitive gifts that border on the psychic when developed","Healing ability — both physical and emotional","Ability to detach from outcome and see situations clearly"],weakness:["Isolation — can withdraw too much from the world","Difficulty with worldly practicalities — money, organisation, social norms","Scattered spirituality without grounding can become escapism","Tendency toward pessimism or existential questioning"],relation:"You need a partner who respects your solitude and depth. Shallow people do not understand you. You connect deeply with very few people. Quality over quantity defines your relationships.",finance:"Wealth through research, spirituality, healing, astrology, IT, writing, or occult sciences. Ketu is not a material planet — you may struggle with conventional wealth but find alternative paths. Spiritual disciplines paradoxically open financial doors.",health:"Prone to mysterious conditions, immune system, neurological, and psychosomatic issues. Regular meditation, healing practices, and time in nature are protective.",famous:"Ketu people — spiritual teachers, researchers, healers, mystics, deep thinkers"},
+  8:{title:"Shani (Saturn) — The Builder",core:["Patient, disciplined, and enduring — you play the long game instinctively","Strong sense of justice and fairness — you cannot tolerate dishonesty","Hardworking beyond most — you do not expect shortcuts or luck","Serious and responsible — you carry weight that others drop","Slow starter but unstoppable once momentum builds — your best years come later","Deep karmic awareness — you feel the weight of consequences more than others"],strength:["Mastery through persistence — you achieve what others give up on","Structural thinking — you build systems, organisations, and lasting things","Trustworthiness that earns long-term loyalty from others","Financial stability through discipline — what you build, you keep"],weakness:["Excessive pessimism or fear of failure","Rigidity — difficulty adapting when circumstances change","Tendency to take on too much responsibility and become burdened","Delayed gratification can feel like deprivation — must trust the process"],relation:"You are loyal, responsible, and serious in relationships. You do not love lightly. You need a partner who appreciates steadiness over excitement. Avoid people who mistake your seriousness for coldness.",finance:"Real estate, law, construction, government, mining, iron, steel, or management. Wealth comes late but stays. Saturday fasting and Shani mantra are powerful protectors. Blue sapphire only after expert consultation.",health:"Prone to bone, joint, teeth, skin, and chronic conditions. Saturn rules time and structure — respect your body's limits. Cold environments and late nights particularly tax Saturn-ruled systems.",famous:"Saturn people — builders, engineers, judges, politicians, long-term investors, government officers"},
+  9:{title:"Kuja (Mars) — The Warrior",core:["Courageous and energetic — you face challenges head-on","Passionate and intense — you feel everything strongly, love and anger alike","Driven by ambition — you need goals or you stagnate","Competitive by nature — you measure yourself against others","Protective of those you love — fiercely loyal and territorial","Action-oriented — you prefer doing to thinking or talking"],strength:["Courage to take action when others hesitate","Physical vitality and stamina that outlasts competitors","Leadership in crisis — you perform best under pressure","Protective instinct that makes you a powerful guardian"],weakness:["Temper — Mars energy turns explosive when provoked","Impulsiveness — acting before full information is gathered","Stubbornness — pride can prevent necessary course corrections","Combativeness — can create conflict where none is needed"],relation:"You love intensely and protect fiercely. You need a partner who can handle your intensity and match your energy. Passive partners bore you. You need someone who stands their ground respectfully.",finance:"Real estate, military, police, sports, surgery, engineering, or any competitive field. Tuesday is your power day. Hanuman worship and Mars mantras on Tuesdays enhance strength and financial protection.",health:"Prone to blood, muscular, inflammation, fever, and accident-related issues. Mars rules blood and fire — watch anger as it literally heats the body. Physical exercise is essential for Mars people as an outlet.",famous:"Mars people — soldiers, athletes, surgeons, engineers, real estate builders, police officers"}
+};
 
-            return (
-                <div className="min-h-screen flex flex-col">
-                    <header className="bg-slate-900 text-white shadow-md z-10 relative">
-                        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                            <h1 className="text-xl font-bold tracking-tight">GURU JI <span className="text-amber-400">ASTROPALM</span></h1>
-                            <button onClick={generatePDF} className="bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-bold py-2 px-4 rounded transition">
-                                Export PDF
-                            </button>
-                        </div>
-                    </header>
+const LP_DEEP={
+  1:"Destiny: To Lead. Life pushes you toward positions of authority, independence, and originality. You are here to pioneer — to start what others continue. Your life lessons involve developing self-reliance, overcoming ego, and learning that true leadership serves others.",
+  2:"Destiny: To Harmonise. Life pushes you toward connection, cooperation, and sensitivity. You are here to bridge — to bring people together, to feel deeply, to create beauty. Your life lessons involve trusting your intuition, overcoming co-dependence, and learning that your sensitivity is a strength.",
+  3:"Destiny: To Teach and Inspire. Life pushes you toward knowledge, wisdom, and sharing. You are here to expand — to learn broadly and give back. Your life lessons involve focus (Jupiter scatters), avoiding excess, and channeling your optimism productively.",
+  4:"Destiny: To Transform. Life pushes you toward the unconventional path — technology, foreign influence, and breaking old systems. You are here to disrupt — to bring what is new. Your life lessons involve managing obsession, developing discipline, and distinguishing ambition from ego.",
+  5:"Destiny: To Communicate and Connect. Life pushes you toward movement, versatility, and exchange. You are here to trade ideas, bridge cultures, and keep the world moving. Your life lessons involve depth (not just breadth), follow-through, and managing restlessness.",
+  6:"Destiny: To Create and Love. Life pushes you toward beauty, harmony, and relationship. You are here to bring Venus energy — art, care, luxury, and deep partnership. Your life lessons involve self-worth independent of others' approval, and creating without losing yourself.",
+  7:"Destiny: To Seek and Heal. Life pushes you toward depth, spirituality, and wisdom. You are here to understand what others miss. Your life lessons involve engaging with the world (not just retreating from it), trusting others, and applying your insights practically.",
+  8:"Destiny: To Build and Master. Life pushes you toward structures, systems, and enduring achievements. You are here to construct — slowly, solidly, with integrity. Your life lessons involve patience, avoiding bitterness when early life is hard, and trusting that Saturn always rewards.",
+  9:"Destiny: To Serve and Protect. Life pushes you toward leadership in service — military, sports, humanitarian, or activist roles. You are here to fight for what matters. Your life lessons involve channeling aggression constructively, developing patience, and serving something larger than personal ambition."
+};
 
-                    <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
-                        
-                        {/* Universal Client Data Form */}
-                        <div className="glass-panel rounded-xl p-4 mb-6">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date of Birth</label>
-                                    <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rashi</label>
-                                    <select value={rashi} onChange={e => setRashi(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                                        <option value="Aries">Mesha (Aries)</option>
-                                        <option value="Taurus">Vrishabha (Taurus)</option>
-                                        <option value="Gemini">Mithuna (Gemini)</option>
-                                        <option value="Cancer">Karkata (Cancer)</option>
-                                        <option value="Leo">Simha (Leo)</option>
-                                        <option value="Virgo">Kanya (Virgo)</option>
-                                        <option value="Libra">Tula (Libra)</option>
-                                        <option value="Scorpio">Vrishchika (Scorpio)</option>
-                                        <option value="Sagittarius">Dhanu (Sagittarius)</option>
-                                        <option value="Capricorn">Makara (Capricorn)</option>
-                                        <option value="Aquarius">Kumbha (Aquarius)</option>
-                                        <option value="Pisces">Meena (Pisces)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Nakshatra</label>
-                                    <input type="text" value={nakshatra} onChange={e => setNakshatra(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                                </div>
-                                <div className="flex space-x-4 items-end">
-                                    <div className="bg-amber-50 rounded p-2 flex-1 border border-amber-100 text-center">
-                                        <div className="text-[10px] text-amber-800 font-bold uppercase">Moolank</div>
-                                        <div className="text-xl font-bold text-amber-600">{moolank || '-'}</div>
-                                    </div>
-                                    <div className="bg-slate-50 rounded p-2 flex-1 border border-slate-200 text-center">
-                                        <div className="text-[10px] text-slate-600 font-bold uppercase">Bhagyank</div>
-                                        <div className="text-xl font-bold text-slate-700">{bhagyank || '-'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+const MISSING_NUM_MEANING={
+  1:"Missing 1 (Sun): Low natural authority. Leadership feels forced rather than innate. Remedy: Face East during important decisions. Name number 1 helps. Surya Namaskar daily.",
+  2:"Missing 2 (Moon): Emotional intuition underdeveloped. May struggle with empathy, reading people, or expressing feelings. Remedy: Monday fasting. Wear white or silver. Keep water near your workspace.",
+  3:"Missing 3 (Jupiter): Wisdom gaps — may take longer to learn from experience. Generosity or faith may be underdeveloped. Remedy: Thursday worship. Yellow in wardrobe. Banana donation to Guru.",
+  4:"Missing 4 (Rahu): May lack drive toward unconventional success or foreign connections. Or over-conventional, fearing change. Remedy: Rahu mantra on Saturdays. Embrace technology and change.",
+  5:"Missing 5 (Mercury): Communication and business acumen may be weaker. Decision-making can be slow or overly cautious. Remedy: Wednesday fasting. Green in wardrobe. Name starting with Mercury-friendly letters.",
+  6:"Missing 6 (Venus): Artistic sense, comfort, or relationship harmony may be underdeveloped. Life may feel aesthetically barren or love may be difficult. Remedy: Friday worship. Pink or white in home. Shukra mantra.",
+  7:"Missing 7 (Ketu): May lack introspective depth or spiritual connection. Tendency to stay on the surface of life. Remedy: Meditation practice. Saturday fasting. Grey or smoky colours.",
+  8:"Missing 8 (Saturn): May lack patience, discipline, or structural thinking. Success may feel elusive despite effort. Remedy: Saturday fasting. Dark blue in wardrobe. Shani mantra. Service to elderly.",
+  9:"Missing 9 (Mars): Courage, physical energy, or competitive drive may be weaker. May avoid confrontation even when necessary. Remedy: Tuesday fasting. Red in wardrobe. Hanuman worship."
+};
 
-                        {/* Tabs Navigation Restored */}
-                        <div className="flex bg-slate-200/50 rounded-t-xl overflow-x-auto border-b border-slate-300">
-                            <NavItem id="profile" label="Dashboard" />
-                            <NavItem id="baby_names" label="Baby Names" />
-                            <NavItem id="names_comparison" label="Name Comparison" />
-                            <NavItem id="events" label="Events & Muhurat" />
-                            <NavItem id="marriage" label="Marriage / Doshas" />
-                        </div>
+const PY_MEANING={
+  1:"Personal Year 1 — New Beginnings. This is a seed-planting year. Start what you want the next 9 years to grow. Launch ventures, relationships, or personal changes now. Energy is high, clarity is good. Act.",
+  2:"Personal Year 2 — Patience and Partnership. This is a consolidation year. Do not force results — they need more time. Focus on relationships, collaboration, and inner development. Avoid major solo ventures.",
+  3:"Personal Year 3 — Expression and Growth. This is a creative and social year. Your visibility increases. Opportunities come through people and communication. Share your ideas — they will land well this year.",
+  4:"Personal Year 4 — Foundation Building. This is a hard-work year. No shortcuts, no luck windfalls — only steady effort. Lay structures now that will serve you for decades. It feels slow but it is necessary.",
+  5:"Personal Year 5 — Change and Freedom. This is a dynamic year. Major changes in career, location, or relationships are common. Travel, new experiences, and unexpected opportunities arrive. Stay flexible.",
+  6:"Personal Year 6 — Responsibility and Home. This is a family and duty year. Relationships deepen or resolve. Home, health, and community take priority. Love and creativity flourish when you commit.",
+  7:"Personal Year 7 — Reflection and Inner Work. This is a rest and wisdom year. Do not push outward aggressively — results will be poor. Meditate, study, reflect, and prepare. The harvest comes next year.",
+  8:"Personal Year 8 — Power and Achievement. This is your harvest year. Efforts from previous years bear fruit. Financial gains, recognition, and authority increase. Make your major moves now.",
+  9:"Personal Year 9 — Completion and Release. This is an ending year. Let go of what no longer serves — relationships, jobs, habits, beliefs. Clear the ground for the next 9-year cycle beginning next year."
+};
 
-                        <div className="glass-panel rounded-b-xl border-t-0 p-6 min-h-[500px]">
-                            
-                            {/* TAB: PROFILE */}
-                            {activeTab === 'profile' && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Lo Shu Grid Alignment</h3>
-                                    <div className="bg-white p-6 rounded border border-slate-200">
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {missingNumbers.map(n => <span key={n} className="px-3 py-1 bg-red-50 text-red-600 font-semibold rounded-full text-sm border border-red-100">Missing {n}</span>)}
-                                            {gridNumbers.length > 0 && [1,2,3,4,5,6,7,8,9].filter(n => gridNumbers.includes(n)).map(n => <span key={n} className="px-3 py-1 bg-green-50 text-green-700 font-semibold rounded-full text-sm border border-green-100">Active {n}</span>)}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+const DASHA_MEANING={
+  Surya:"Sun Mahadasha (6 years): Authority rises. Career advancement, recognition from government or institutions. Father's health may be relevant. Strong energy and drive. Best period for leadership roles.",
+  Chandra:"Moon Mahadasha (10 years): Emotional life intensifies. Travel, public dealings, and mother's influence prominent. Creative and artistic success. Mood fluctuations are normal — trust intuition.",
+  Kuja:"Mars Mahadasha (7 years): High energy, competition, and decisive action period. Real estate, physical ventures, and courage-based moves work well. Watch temper and health — blood and accidents.",
+  Rahu:"Rahu Mahadasha (18 years): Dramatic period of ambition, foreign connections, and unconventional success. Can feel overwhelming. Technology, mass media, and foreign lands are favored. Avoid intoxicants.",
+  Guru:"Jupiter Mahadasha (16 years): Most auspicious period for most charts. Wisdom, wealth, children, and spiritual growth. Teaching, law, banking, and advisory roles flourish. Expand — Jupiter supports.",
+  Shani:"Saturn Mahadasha (19 years): Hardest but most transformative period. Delays, discipline, and karmic settling. Slow results but permanent. Real estate, government, and structural work. Trust the process.",
+  Budha:"Mercury Mahadasha (17 years): Intelligence, communication, and commercial success. Business, writing, education, and travel flourish. Multiple opportunities — need focus to maximize.",
+  Ketu:"Ketu Mahadasha (7 years): Spiritual awakening and material detachment. Past karma settles. Introspection, healing, and letting go. Not ideal for major material launches — ideal for inner development.",
+  Shukra:"Venus Mahadasha (20 years): Most abundant period for relationships, beauty, luxury, and creative success. Marriages happen, arts flourish, comforts increase. Longest Mahadasha — enjoy deeply."
+};
 
-                            {/* TAB: BABY NAMES (Dual Engine) */}
-                            {activeTab === 'baby_names' && (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <label className="block text-sm font-semibold text-slate-700">First Name</label>
-                                            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold uppercase outline-none" />
-                                            <div className="text-sm">
-                                                Compound: <strong>{firstTotal}</strong> &rarr; Final: <strong className="text-amber-600">{firstReduced}</strong>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="block text-sm font-semibold text-slate-700">Surname</label>
-                                            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold uppercase outline-none" />
-                                            <div className="text-sm">Compound: <strong>{lastTotal}</strong></div>
-                                        </div>
-                                    </div>
-                                    
-                                    <button onClick={addNameToComparison} className="bg-slate-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-slate-700">
-                                        Save to Comparison &rarr;
-                                    </button>
+const NAK_DEEP={
+  lord_meaning:{
+    Ketu:"Ketu-ruled Nakshatra: Deep spiritual wisdom, past-life connection, healing gifts, and karmic intensity. You came into this life with accumulated wisdom — the challenge is trusting it.",
+    Shukra:"Venus-ruled Nakshatra: Aesthetic sensitivity, creative gifts, love of beauty and harmony, and magnetic charm. Life's pleasures are your teachers and your rewards.",
+    Surya:"Sun-ruled Nakshatra: Leadership, confidence, authority, and clarity of purpose. You are meant to shine — do not dim yourself to make others comfortable.",
+    Chandra:"Moon-ruled Nakshatra: Intuitive depth, nurturing power, public appeal, and emotional intelligence. The masses feel what you feel — your inner world has outer consequences.",
+    Kuja:"Mars-ruled Nakshatra: Courage, drive, competitive spirit, and protective instincts. You are built for action — stagnation is your real enemy.",
+    Rahu:"Rahu-ruled Nakshatra: Unconventional path, foreign influence, ambition without limit, and transformation through disruption. You break old moulds intentionally or by circumstance.",
+    Guru:"Jupiter-ruled Nakshatra: Wisdom, generosity, philosophical depth, and the teacher's gift. Your purpose involves sharing what you know with others.",
+    Shani:"Saturn-ruled Nakshatra: Discipline, endurance, service, and mastery through sustained effort. Nothing comes easily — but what you earn, no one can take.",
+    Budha:"Mercury-ruled Nakshatra: Intelligence, communication, versatility, and commercial instinct. Your mind is your greatest asset — keep feeding it."
+  },
+  gana_meaning:{
+    Deva:"Deva Gana (Divine Temperament): You are naturally gentle, principled, and inclined toward goodness. You uphold dharma even when it costs you. Relationships with other Deva Gana people are most harmonious.",
+    Manushya:"Manushya Gana (Human Temperament): You are balanced — neither overly gentle nor harsh. Practical, realistic, and human in your approach. You understand both idealism and pragmatism.",
+    Rakshasa:"Rakshasa Gana (Intense Temperament): You are powerful, self-reliant, and do not follow conventional rules. You are here to disrupt, build your own path, and operate by your own code. Authority structures feel restrictive."
+  }
+};
 
-                                    {(firstName || lastName) && (
-                                        <div className="mt-6 p-6 bg-slate-900 rounded-xl text-white">
-                                            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">Official Name Lock</div>
-                                            <div className="text-2xl font-bold tracking-widest">{firstName.toUpperCase()} {lastName.toUpperCase()}</div>
-                                            <div className="mt-4 text-sm text-slate-300">Total: {fullTotal} &rarr; Destiny Value: <strong className="text-amber-400 text-xl">{fullReduced}</strong></div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+const REMEDY_DEEP={
+  1:{day:"Sunday",fast:"Sunday fasting (one meal, Sattvic food)",mantra:"Om Hreem Suryaya Namah (108 times at sunrise)",color:"Red, orange, copper",direction:"Face East for important decisions and morning prayers",gemstone:"Ruby (guidance needed — birth chart required for exact recommendation)",activity:"Surya Namaskar daily at sunrise",donate:"Wheat, jaggery, copper items to a temple on Sunday"},
+  2:{day:"Monday",fast:"Monday fasting (white food, milk, rice)",mantra:"Om Shreem Chandraya Namah (108 times in evening)",color:"White, silver, cream, pearl tones",direction:"Face North-East for prayers",gemstone:"Pearl (fresh water pearl — wear on Monday on ring finger, silver setting)",activity:"Moonlight meditation on full moon nights",donate:"Rice, white cloth, milk to needy on Monday"},
+  3:{day:"Thursday",fast:"Thursday fasting (yellow food, dal, turmeric)",mantra:"Om Graam Greem Graum Sah Guruve Namah",color:"Yellow, gold, saffron",direction:"Face North-East",gemstone:"Yellow sapphire (guidance needed — birth chart required)",activity:"Teaching or sharing knowledge with someone weekly",donate:"Yellow dal, turmeric, banana to temple on Thursday"},
+  4:{day:"Saturday (Rahu hours)",fast:"No specific fast — avoid intoxicants",mantra:"Om Raam Rahave Namah",color:"Smoky grey, electric blue, dark tones",direction:"Face South-West",gemstone:"Hessonite garnet (guidance needed)",activity:"Meditation and technology-free time on Saturdays",donate:"Black sesame, coal, or mustard oil to Shani deity on Saturday"},
+  5:{day:"Wednesday",fast:"Wednesday fasting (green vegetables, spinach)",mantra:"Om Braam Breem Braum Sah Budhaya Namah",color:"Green, light grey, multi-colour",direction:"Face North",gemstone:"Emerald (guidance needed — Mercury must be well-placed)",activity:"Reading, writing, or learning something new daily",donate:"Green vegetables, moong dal, green cloth on Wednesday"},
+  6:{day:"Friday",fast:"Friday fasting (white/sweet food)",mantra:"Om Draam Dreem Draum Sah Shukraya Namah",color:"Pink, white, ivory, pastel tones",direction:"Face South-East",gemstone:"Diamond or white sapphire (guidance needed)",activity:"Creative practice — art, music, dance, cooking weekly",donate:"White rice, white sweets, white clothing to women on Friday"},
+  7:{day:"Saturday (Ketu hours)",fast:"Saturday semi-fast (light meal)",mantra:"Om Sraam Sreem Sraum Sah Ketave Namah",color:"Smoky, grey, multi-colour, ash tones",direction:"Face North-West",gemstone:"Cat's eye / Chrysoberyl (guidance needed — very powerful stone)",activity:"Meditation 20 minutes daily minimum — Ketu demands inward attention",donate:"Sesame seeds, multi-grain, grey cloth on Saturday"},
+  8:{day:"Saturday",fast:"Saturday fasting (oil-free, simple food)",mantra:"Om Praam Preem Praum Sah Shanaischaraya Namah",color:"Dark blue, black, indigo, navy",direction:"Face West",gemstone:"Blue sapphire (most powerful and most dangerous — only with expert guidance)",activity:"Service to elderly, disabled, or underprivileged on Saturdays",donate:"Black sesame, mustard oil, iron items, dark blue cloth on Saturday"},
+  9:{day:"Tuesday",fast:"Tuesday fasting (red food, avoid non-veg)",mantra:"Om Kraam Kreem Kraum Sah Bhaumaya Namah",color:"Red, maroon, coral",direction:"Face South",gemstone:"Red coral (wear on Tuesday in gold or copper setting on ring finger)",activity:"Hanuman worship on Tuesday — powerful for Mars energy",donate:"Red lentils, red cloth, jaggery, copper items on Tuesday"}
+};
 
-                            {/* TAB: NAME COMPARISON */}
-                            {activeTab === 'names_comparison' && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Saved Names Analysis</h3>
-                                    {savedNames.length === 0 ? (
-                                        <p className="text-slate-500 text-sm">No names saved yet. Add them from the Baby Names tab.</p>
-                                    ) : (
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse">
-                                                <thead>
-                                                    <tr className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
-                                                        <th className="p-3 border-b">Full Name</th>
-                                                        <th className="p-3 border-b">First Name (Comp/Red)</th>
-                                                        <th className="p-3 border-b">Full Name (Comp/Red)</th>
-                                                        <th className="p-3 border-b">Fills Gaps?</th>
-                                                        <th className="p-3 border-b"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="text-sm">
-                                                    {savedNames.map((name) => (
-                                                        <tr key={name.id} className="border-b hover:bg-slate-50">
-                                                            <td className="p-3 font-bold text-slate-800">{name.first} {name.last}</td>
-                                                            <td className="p-3">{name.firstT} &rarr; <span className="font-bold text-amber-600">{name.firstR}</span></td>
-                                                            <td className="p-3">{name.fullT} &rarr; <span className="font-bold text-amber-600">{name.fullR}</span></td>
-                                                            <td className="p-3">
-                                                                <div className="flex flex-col text-xs space-y-1">
-                                                                    <span className={missingNumbers.includes(name.firstR) ? "text-green-600 font-bold" : "text-slate-400"}>1st: {missingNumbers.includes(name.firstR) ? 'Yes' : 'No'}</span>
-                                                                    <span className={missingNumbers.includes(name.fullR) ? "text-green-600 font-bold" : "text-slate-400"}>Full: {missingNumbers.includes(name.fullR) ? 'Yes' : 'No'}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="p-3">
-                                                                <button onClick={() => removeName(name.id)} className="text-red-500 hover:text-red-700 text-xs font-bold">Remove</button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+function generatePersonalPDF(r, name, dn, lagna, maha, antar){
+  if(!r){alert('Please generate the reading first.');return;}
+  const {jsPDF}=window.jspdf;
+  if(!jsPDF){alert('PDF library not loaded.');return;}
 
-                            {/* TAB: EVENTS & MUHURAT */}
-                            {activeTab === 'events' && (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-white p-6 rounded border border-slate-200">
-                                            <h3 className="text-lg font-bold text-red-800 mb-4">⛔ Daily Inauspicious Windows</h3>
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between p-3 bg-red-50 rounded border border-red-100">
-                                                    <span className="text-sm font-semibold text-red-900">Rahu Kaal</span>
-                                                    <span className="font-mono text-red-700">{RAHU_KAAL[new Date().getDay()]}</span>
-                                                </div>
-                                                <div className="flex justify-between p-3 bg-orange-50 rounded border border-orange-100">
-                                                    <span className="text-sm font-semibold text-orange-900">Yamaganda</span>
-                                                    <span className="font-mono text-orange-700">{YAMAGANDA[new Date().getDay()]}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=210,ph=297,ml=15,tw=180,lh=5.8;
+  let y=22;
+  const AMBER=[217,119,6];const DARK=[15,23,42];const GREY=[100,116,139];
+  const GREEN=[5,150,105];const RED=[220,38,38];const BLUE=[37,99,235];
+  const LGREY=[241,245,249];const WHITE=[255,255,255];const CREAM=[250,248,244];
 
-                            {/* TAB: MARRIAGE / DOSHAS */}
-                            {activeTab === 'marriage' && (
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Chart Temperament Analysis</h3>
-                                    {isMarsRuled ? (
-                                        <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
-                                            <h4 className="font-bold text-orange-800">Martian Energy Detected (Rashi Level)</h4>
-                                            <p className="text-sm text-orange-700 mt-1">Confidence: 5/10. {rashi} is ruled by Mars. Full chart needed to confirm Kuja/Mangal Dosha.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
-                                            <h4 className="font-bold text-green-800">Standard Temperament</h4>
-                                            <p className="text-sm text-green-700 mt-1">No direct Martian rulership at Rashi level.</p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+  function hdr(){
+    doc.setFillColor(...DARK);doc.rect(0,0,pw,14,'F');
+    doc.setTextColor(...AMBER);doc.setFontSize(11);doc.setFont('helvetica','bold');
+    doc.text('GURU JI ASTROPALM',pw/2,9,{align:'center'});
+    doc.setTextColor(...GREY);doc.setFontSize(6);doc.setFont('helvetica','normal');
+    doc.text('CHALDEAN NUMEROLOGY + VEDIC ASTROLOGY + KUA NUMBER',pw/2,13,{align:'center'});
+  }
+  function np(){doc.addPage();y=20;hdr();}
+  function cy(n=8){if(y+n>ph-14)np();}
 
-                        </div>
-                    </main>
-                </div>
-            );
-        };
+  function secHead(title,badge){
+    cy(14);y+=3;
+    doc.setFillColor(...LGREY);
+    doc.roundedRect(ml,y-5,tw,9,2,2,'F');
+    doc.setTextColor(...DARK);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text(title,ml+3,y,{maxWidth:tw-30});
+    if(badge){
+      doc.setFontSize(7);doc.setFont('helvetica','normal');
+      doc.setTextColor(...GREY);
+      doc.text(badge,ml+tw-2,y,{align:'right'});
+    }
+    y+=7;
+    doc.setDrawColor(...AMBER);doc.setLineWidth(0.3);doc.line(ml,y,ml+tw,y);y+=4;
+  }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+  function line(text,type='body'){
+    if(!text||String(text).trim().length<1)return;
+    const t=String(text).replace(/[^\x20-\x7E\u0900-\u097F ]/g,'').trim();
+    if(!t)return;
+    cy(7);
+    if(type==='pos'){doc.setTextColor(...GREEN);doc.setFont('helvetica','normal');doc.setFontSize(8.5);}
+    else if(type==='neg'){doc.setTextColor(...RED);doc.setFont('helvetica','normal');doc.setFontSize(8.5);}
+    else if(type==='warn'){doc.setTextColor(...AMBER);doc.setFont('helvetica','italic');doc.setFontSize(8.5);}
+    else if(type==='head2'){doc.setTextColor(...DARK);doc.setFont('helvetica','bold');doc.setFontSize(9);}
+    else if(type==='label'){doc.setTextColor(...GREY);doc.setFont('helvetica','bold');doc.setFontSize(7.5);}
+    else{doc.setTextColor(...DARK);doc.setFont('helvetica','normal');doc.setFontSize(8.5);}
+    const prefix=type==='pos'?'+ ':type==='neg'?'- ':type==='warn'?'> ':'  ';
+    const wrapped=doc.splitTextToSize((type==='head2'||type==='label'?'':prefix)+t,tw-4);
+    wrapped.forEach(wl=>{cy(6);doc.text(wl,ml+(type==='head2'||type==='label'?0:2),y);y+=lh;});
+  }
+
+  function row(label,value,sub){
+    cy(10);
+    doc.setFillColor(248,250,252);doc.rect(ml,y-4,tw,8,'F');
+    doc.setTextColor(...GREY);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+    doc.text(label,ml+2,y);
+    doc.setTextColor(...DARK);doc.setFont('helvetica','normal');
+    const v=String(value||'').replace(/[^\x20-\x7E]/g,'');
+    doc.text(v,ml+tw-2,y,{align:'right',maxWidth:tw/2});
+    if(sub){doc.setTextColor(...GREY);doc.setFontSize(6.5);doc.text(String(sub).replace(/[^\x20-\x7E]/g,''),ml+tw-2,y+4,{align:'right',maxWidth:tw/2});}
+    y+=sub?10:8;
+  }
+
+  function divider(){cy(4);doc.setDrawColor(...LGREY);doc.setLineWidth(0.2);doc.line(ml,y,ml+tw,y);y+=4;}
+
+  hdr();
+
+  // ── BANNER ──
+  doc.setFillColor(...DARK);doc.roundedRect(ml,y,tw,24,3,3,'F');
+  doc.setTextColor(...WHITE);doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text(name||'Personal Reading',pw/2,y+9,{align:'center'});
+  if(dn&&dn!==name){doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(...GREY);doc.text('Known as: '+dn,pw/2,y+15,{align:'center'});}
+  const nums=[
+    {l:'Moolank',v:r.b.r},{l:'Bhagyank',v:r.lp.r},{l:'Name#',v:r.nc.r},
+    {l:'Kua',v:r.kua},{l:'PY 2026',v:r.py}
+  ];
+  const bw=tw/nums.length;
+  nums.forEach((n,i)=>{
+    const x=ml+i*bw+bw/2;
+    doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(...AMBER);
+    doc.text(String(n.v),x,y+20,{align:'center'});
+  });
+  y+=26;
+
+  nums.forEach((n,i)=>{
+    const x=ml+i*bw+bw/2;
+    doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.setTextColor(...GREY);
+    doc.text(n.l,x,y,{align:'center'});
+  });
+  y+=8;divider();
+
+  // ── KEY NUMBERS ──
+  secHead('Core Numbers at a Glance','Chaldean 10/10');
+  row('Moolank (Birth#)',`${r.b.r} - ${r.md_deep?.title||''}`,r.b.c>9?`Compound ${r.b.c}: ${CO[r.b.c]||''}`:null);
+  row('Bhagyank (Life Path)',`${r.lp.r} - ${PN[r.lp.r]||''}`,r.lp.c>9?`Compound ${r.lp.c}: ${CO[r.lp.c]||''}`:null);
+  row('Official Name Number',`${r.nc.r} - ${PN[r.nc.r]||''}`,r.nc.c>9?`Compound ${r.nc.c}: ${CO[r.nc.c]||''}`:null);
+  if(r.dc)row('Daily Name Number',`${r.dc.r} - ${PN[r.dc.r]||''}`,r.dc.c>9?`Compound ${r.dc.c}: ${CO[r.dc.c]||''}`:null);
+  row('Kua Number',`${r.kua} - ${KE[r.kua]||''}`,`Direction: ${KD[r.kua]||''} | ${KG.east.includes(r.kua)?'East':'West'} Group`);
+  row('Personal Year 2026',`PY ${r.py}`,r.py_mean?.split('.')[0]);
+  row('Born on',`${WD[r.wd]||''} - ${WDP[r.wd]||''}`,null);
+  if(lagna)row('Lagna (Ascendant)',`${lagna} (${RE[lagna]||''})`,`Lord: ${RL[lagna]||''}`);
+
+  // ── LO SHU GRID ──
+  secHead('Lo-Shu Birth Grid','Chaldean 10/10');
+  line(`DOB: ${r.dd}/${r.mm}/${r.yy} | Moolank: ${r.b.r} | Bhagyank: ${r.lp.r}`,'warn');
+  const gx=ml+30,gy=y,gs=18;
+  const layout=[[4,9,2],[3,5,7],[8,1,6]];
+  layout.forEach((row2,ri)=>{
+    row2.forEach((num,ci)=>{
+      const nx=gx+ci*gs,ny=gy+ri*gs;
+      const present=r.grid.present.includes(num);
+      doc.setFillColor(present?245:248,present?158:250,present?11:252);
+      doc.roundedRect(nx,ny,gs-1,gs-1,2,2,'F');
+      doc.setDrawColor(...LGREY);doc.setLineWidth(0.3);doc.roundedRect(nx,ny,gs-1,gs-1,2,2,'S');
+      doc.setTextColor(...(present ? AMBER : LGREY));
+      doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text(String(num),nx+gs/2-0.5,ny+10,{align:'center'});
+      const cnt=(r.grid.nums||{})[num];
+      if(cnt>1){doc.setFontSize(6);doc.text(`x${cnt}`,nx+gs-4,ny+4);}
+    });
+  });
+  const legX=gx+gs*3+4;
+  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...GREY);
+  doc.text(`Missing: ${r.missing.map(n=>`${n}(${PN[n]?.split('(')[0]||n})`).join(', ')||'None'}`,legX,gy+6,{maxWidth:60});
+  doc.text(`Kua: ${r.kua}${r.grid.present.includes(r.kua)?'':' - fills gap!'}`,legX,gy+14);
+  doc.text(`Name #${r.nc.r}${r.grid.present.includes(r.nc.r)?' - overlaps':' - fills gap!'}`,legX,gy+22);
+  y=gy+gs*3+6;divider();
+
+  // ── CORE IDENTITY ──
+  if(r.md_deep){
+    secHead(`Core Identity - ${r.md_deep.title}`,'Moolank');
+    line(`Born on ${r.dd}th — Moolank ${r.b.r}${r.b.c>9?` (Compound ${r.b.c}: ${CO[r.b.c]||''})`:''}`,'warn');
+    r.md_deep.core.forEach(c=>line(c,'body'));
+    divider();
+    secHead('Strengths & Shadow Sides','Chaldean 9/10');
+    line('STRENGTHS','head2');
+    r.md_deep.strength.forEach(s=>line(s,'pos'));
+    y+=2;line('SHADOW SIDES','head2');
+    r.md_deep.weakness.forEach(w=>line(w,'neg'));
+    divider();
+  }
+
+  // ── DESTINY ──
+  secHead(`Life Path & Destiny - Bhagyank ${r.lp.r}`,'');
+  if(r.lp.c>9)line(`Compound ${r.lp.c}: ${CO[r.lp.c]||''}`,'warn');
+  line(r.lp_deep||'','body');
+  if(r.b.r===r.lp.r)line(`DOUBLE ${r.b.r}: Your Moolank and Bhagyank are identical - your nature and destiny are perfectly aligned. Exceptional.`,'pos');
+  if(gF(r.b.r,r.lp.r)==='Hostile')line(`Moolank ${r.b.r} and Bhagyank ${r.lp.r} are hostile - internal tension between natural personality and life destiny. Conscious integration is key.`,'neg');
+  if(gF(r.b.r,r.lp.r)==='Friendly')line(`Moolank ${r.b.r} and Bhagyank ${r.lp.r} are friendly - your personality supports your life purpose naturally.`,'pos');
+  divider();
+
+  // ── NAME ANALYSIS ──
+  secHead('Name Number Analysis','Chaldean 10/10');
+  line(`Official name "${name}" = ${r.nc.r} (${PN[r.nc.r]||''})${r.nc.c>9?` | Compound ${r.nc.c}: ${CO[r.nc.c]||''}`:''}`, 'body');
+  const nc_compat=gF(r.nc.r,r.b.r);
+  if(nc_compat==='Friendly')line(`Name ${r.nc.r} is FRIENDLY with Moolank ${r.b.r} - name amplifies your natural energy.`,'pos');
+  else if(nc_compat==='Hostile')line(`Name ${r.nc.r} CONFLICTS with Moolank ${r.b.r} - name works against natural energy. Consider spelling adjustment.`,'neg');
+  else line(`Name ${r.nc.r} is Neutral with Moolank ${r.b.r}.`,'body');
+  if(r.dc){
+    line(`Daily name "${dn}" = ${r.dc.r} (${PN[r.dc.r]||''})${r.dc.c>9?` | Compound ${r.dc.c}: ${CO[r.dc.c]||''}`:''}`, 'body');
+    const dc_compat=gF(r.dc.r,r.b.r);
+    if(dc_compat==='Friendly')line(`Daily name ${r.dc.r} is FRIENDLY with Moolank - reinforces positive energy.`,'pos');
+    else if(dc_compat==='Hostile')line(`Daily name ${r.dc.r} CONFLICTS with Moolank - even informal use weakens energy.`,'neg');
+  }
+  if(r.grid.missing.includes(r.nc.r))line(`EXCELLENT: Name number ${r.nc.r} fills a MISSING slot in your Lo-Shu grid.`,'pos');
+  divider();
+
+  // ── MISSING NUMBERS ──
+  if(r.missing.length>0){
+    secHead(`Missing Numbers - ${r.missing.length} Energy Gaps`,'');
+    line(`${r.missing.length} missing numbers represent areas needing conscious development.`,'warn');
+    r.missing.forEach(n=>line(MISSING_NUM_MEANING[n]||`Missing ${n}`,'body'));
+    divider();
+  }
+
+  // ── PERSONAL YEAR ──
+  secHead(`Personal Year ${r.py} - 2026`,'Current Phase');
+  line(r.py_mean||'','body');
+  divider();
+
+  // ── VEDIC NAKSHATRA ──
+  if(r.ni){
+    secHead(`Nakshatra Reading - ${r.ni.name}`,'Vedic 8/10');
+    row('Nakshatra',r.ni.name,`Deity: ${r.ni.deity}`);
+    row('Lord',r.ni.lord,PN[getNakLordNum(r.ni.lord)]||'');
+    row('Pada',`Pada ${r.ni.pada}`,`Name letter: ${r.ni.letter}`);
+    row('Navamsha',`${r.ni.navamsha} (${RE[r.ni.navamsha]||''})`,`Lord: ${r.ni.navLord}`);
+    row('Rashi',`${r.ni.rashi} (${RE[r.ni.rashi]||''})`,`Lord: ${RL[r.ni.rashi]||''}`);
+    row('Gana',r.ni.gana,r.ni.gana==='Deva'?'Divine temperament':r.ni.gana==='Manushya'?'Human, balanced':'Intense, independent');
+    line(NAK_DEEP.lord_meaning[r.ni.lord]||'','body');
+    line(NAK_DEEP.gana_meaning[r.ni.gana]||'','body');
+    if(r.ni.navamsha===r.ni.rashi)line(`VARGOTTAMA: Rashi and Navamsha are the same sign (${r.ni.rashi}) - very powerful placement. Outer personality and inner soul fully aligned.`,'pos');
+    if(r.aligned)line(`CHALDEAN-VEDIC ALIGNMENT: Nakshatra lord (${r.ni.lord}) matches Chaldean numbers - both systems confirm same energy.`,'pos');
+    divider();
+  }
+
+  // ── CAREER ──
+  if(r.md_deep){
+    secHead('Career, Finance & Life Path','Chaldean + Vedic');
+    line(r.md_deep.finance,'body');
+    if(r.ni)line(`Vedic: ${NAK_DEEP.lord_meaning[r.ni.lord]||''}`,'body');
+    line(`Kua ${r.kua} (${KE[r.kua]||''} element): Best work direction is ${KD[r.kua]||''}. Face this direction during important meetings and focused work.`,'pos');
+    divider();
+
+    secHead('Relationships & Compatibility Pattern','Chaldean 8/10');
+    line(r.md_deep.relation,'body');
+    if(r.ni)line(`Vedic Gana: ${NAK_DEEP.gana_meaning[r.ni.gana]||''}`,'body');
+    const friends=[1,2,3,4,5,6,7,8,9].filter(n=>gF(r.b.r,n)==='Friendly'||gF(r.b.r,n)==='Same');
+    const enemies=[1,2,3,4,5,6,7,8,9].filter(n=>gF(r.b.r,n)==='Hostile');
+    line(`Compatible numbers: ${friends.join(', ')}  |  Handle carefully: ${enemies.join(', ')}`,'body');
+    divider();
+
+    secHead('Health Tendencies','General Guidance');
+    line(r.md_deep.health,'warn');
+    line('These are tendencies, not certainties. A healthy lifestyle overrides numerical predispositions.','body');
+    divider();
+  }
+
+  // ── DASHA ──
+  if(maha||antar){
+    secHead('Current Dasha Period Analysis','Vedic 7/10');
+    if(maha){
+      line(`Mahadasha: ${maha}`,'head2');
+      line(DASHA_MEANING[maha]||'','body');
+      if(maha==='Shani')line('Saturn Mahadasha: Do not compare your timeline to others. Your harvest is being prepared carefully.','warn');
+      if(maha==='Guru')line('Jupiter Mahadasha: One of the most auspicious periods. Expand - reach for opportunities now.','pos');
+      if(maha==='Rahu')line('Rahu Mahadasha: Intensity and rapid change. Foreign paths open. Stay grounded.','warn');
+    }
+    if(antar&&maha)line(`Currently in ${maha}-${antar} Antardasha: ${antar} themes are the immediate focus. ${maha} is the broader framework.`,'body');
+    line('Verify exact Dasha dates on Prokerala or DrikPanchang with birth time and place.','warn');
+    divider();
+  }
+
+  // ── REMEDIES ──
+  if(r.rem){
+    secHead('Remedies & Strengthening Practices','General Guidance');
+    row('Power Day',r.rem.day,null);
+    row('Fasting',r.rem.fast,null);
+    row('Colors',r.rem.color,null);
+    row('Direction',r.rem.direction,null);
+    row('Activity',r.rem.activity,null);
+    row('Donation',r.rem.donate,null);
+    y+=2;
+    line('Mantra:','head2');
+    line(r.rem.mantra,'warn');
+    y+=2;
+    line('Gemstone Note:','head2');
+    line(r.rem.gemstone+'. Gemstones are powerful — always consult a qualified Jyotishi before wearing.','neg');
+  }
+
+  // ── FOOTER ──
+  const n=doc.internal.getNumberOfPages();
+  for(let i=1;i<=n;i++){
+    doc.setPage(i);
+    doc.setFillColor(...LGREY);doc.rect(0,ph-10,pw,10,'F');
+    doc.setTextColor(...GREY);doc.setFontSize(6);doc.setFont('helvetica','normal');
+    doc.text('Guru Ji AstroPalm | Chaldean: 10/10 mathematical accuracy | Vedic: verify Nakshatra from Panchang for your city',pw/2,ph-5,{align:'center'});
+    doc.text(`${i}/${n}`,pw-ml,ph-5,{align:'right'});
+    doc.text(new Date().toLocaleDateString('en-IN'),ml,ph-5);
+  }
+
+  const fname=(name||'Personal').replace(/\s+/g,'_')+'_AstroPalm_Deep_Reading.pdf';
+  doc.save(fname);
+}
+
+// ═══════ DEEP PERSONAL READING COMPONENT ═══════
+function PersonalReading(){
+  const [name,sN]=useState('');const [dn,sDn]=useState('');
+  const [d,sD]=useState('');const [m,sM]=useState('');const [y,sY]=useState('');
+  const [nakI,sNI]=useState('');const [padaN,sPN]=useState('');
+  const [gender,sGender]=useState('M');
+  const [lagna,sLagna]=useState('');
+  const [maha,sMaha]=useState('');
+  const [antar,sAntar]=useState('');
+  const [show,sS]=useState(false);
+  const [open,sOpen]=useState({});
+  const toggle=k=>sOpen(p=>({...p,[k]:!p[k]}));
+
+  const DASHAS=[
+    {val:'Surya',label:'Surya (Sun)'},{val:'Chandra',label:'Chandra (Moon)'},{val:'Kuja',label:'Kuja (Mars)'},
+    {val:'Rahu',label:'Rahu'},{val:'Guru',label:'Guru (Jupiter)'},{val:'Shani',label:'Shani (Saturn)'},
+    {val:'Budha',label:'Budha (Mercury)'},{val:'Ketu',label:'Ketu'},{val:'Shukra',label:'Shukra (Venus)'},
+  ];
+
+  const cardStyle={background:'#ffffff',borderRadius:12,padding:'16px 20px',border:'1px solid #e2e8f0',marginBottom:0,boxShadow:'0 2px 4px rgba(0,0,0,0.02)'};
+  const hdrStyle={display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',padding:'14px 18px',borderRadius:10,background:'#ffffff',border:'1px solid #e2e8f0',boxShadow:'0 1px 3px rgba(0,0,0,0.03)',transition:'all 0.2s'};
+  const secTitle={fontSize:14,fontWeight:'700',color:'#0f172a',letterSpacing:0.3};
+  const labelSt={fontSize:11,color:'#64748b',fontWeight:'600',letterSpacing:0.5,marginBottom:6,display:'block'};
+
+  const r=useMemo(()=>{
+    if(!name||!d||!m||!y)return null;
+    const dd=parseInt(d),mm=parseInt(m),yy=parseInt(y);if(isNaN(dd)||isNaN(mm)||isNaN(yy))return null;
+    const nc=cN(name),dc=dn?cN(dn):null,b=cB(dd),lp=cL(dd,mm,yy);
+    const dt=new Date(yy,mm-1,dd),wd=dt.getDay(),py=cPY(dd,mm,2026);
+    const kua=cKua(yy,gender);
+    const grid=gG(dd,mm,yy,nc.r,kua,0);
+    let ni=null;if(nakI!==''&&padaN!==''){const idx=parseInt(nakI),p=parseInt(padaN);
+      if(!isNaN(idx)&&!isNaN(p)&&idx>=0&&idx<27&&p>=1&&p<=4){const nk=NAK[idx];
+        ni={name:nk.n,lord:nk.lord,deity:nk.deity,gana:nk.gana,rashi:nk.r[p-1],navamsha:nk.nav[p-1],letter:nk.let[p-1],pada:p,navLord:RL[nk.nav[p-1]]}}}
+    const missing=grid.missing;
+    const md_deep=MOOLANK_DEEP[b.r];
+    const lp_deep=LP_DEEP[lp.r];
+    const py_mean=PY_MEANING[py];
+    const rem=REMEDY_DEEP[b.r];
+    const nakLordNum=ni?getNakLordNum(ni.lord):0;
+    const aligned=nakLordNum&&(nakLordNum===b.r||nakLordNum===lp.r);
+    return{nc,dc,b,lp,wd,py,kua,ni,dd,mm,yy,grid,missing,md_deep,lp_deep,py_mean,rem,aligned,nakLordNum};
+  },[name,dn,d,m,y,nakI,padaN,gender]);
+
+  function Sec({id,title,icon,badge,children}){
+    const isOpen=open[id];
+    return(<div style={{marginBottom:10}}>
+      <div style={hdrStyle} onClick={()=>toggle(id)}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:14,fontWeight:"700",color:'#d97706',minWidth:16}}>{icon}</span>
+          <span style={secTitle}>{title}</span>
+          {badge&&<span style={{fontSize:10,background:'#fef3c7',color:'#d97706',padding:'2px 8px',borderRadius:12,fontWeight:'600',border:'1px solid #fde68a'}}>{badge}</span>}
+        </div>
+        <span style={{color:'#d97706',fontSize:12,fontWeight:'700'}}>{isOpen?'▲':'▼'}</span>
+      </div>
+      {isOpen&&<div style={{background:'#f8fafc',borderRadius:'0 0 10px 10px',padding:'16px',border:'1px solid #e2e8f0',borderTop:'none',marginTop:-4}}>{children}</div>}
+    </div>);
+  }
+
+  function Pt({text,type='info'}){
+    const col=type==='pos'?'#059669':type==='neg'?'#dc2626':type==='warn'?'#d97706':'#475569';
+    const bg2=type==='pos'?'#ecfdf5':type==='neg'?'#fef2f2':type==='warn'?'#fffbeb':'#ffffff';
+    const prefix=type==='pos'?'✦':type==='neg'?'▸':type==='warn'?'◉':'◦';
+    return(<div style={{display:'flex',gap:10,marginBottom:8,padding:'10px 12px',background:bg2,borderRadius:8,borderLeft:`3px solid ${col}`,boxShadow:'0 1px 2px rgba(0,0,0,0.02)'}}>
+      <span style={{color:col,fontWeight:'700',fontSize:12,flexShrink:0}}>{prefix}</span>
+      <span style={{fontSize:12,color:'#0f172a',lineHeight:1.5,fontWeight:'500'}}>{text}</span>
+    </div>);
+  }
+
+  function Row({label,value,sub2}){
+    return(<div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',padding:'10px 0',borderBottom:'1px solid #e2e8f0'}}>
+      <span style={{fontSize:12,color:'#64748b',fontWeight:'600'}}>{label}</span>
+      <div style={{textAlign:'right'}}>
+        <span style={{fontSize:13,color:'#0f172a',fontWeight:'700'}}>{value}</span>
+        {sub2&&<div style={{fontSize:10,color:'#64748b',marginTop:2,fontWeight:'500'}}>{sub2}</div>}
+      </div>
+    </div>);
+  }
+
+  return(<div style={{background:'#f1f5f9',minHeight:'100vh'}}>
+    <div style={{...cardStyle,marginBottom:16}}>
+      <h3 style={{fontSize:18,fontWeight:'800',color:'#0f172a',marginBottom:6,letterSpacing:0.3}}>Personal Reading</h3>
+      <p style={{fontSize:11,color:'#64748b',marginBottom:16,fontWeight:'500'}}>Deep Chaldean + Vedic analysis. Fill in details from DrikPanchang for maximum accuracy.</p>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div><label style={labelSt}>Official Full Name</label><input style={IS} value={name} onChange={e=>sN(e.target.value)} placeholder="As per official records" autoComplete="off"/></div>
+        <div><label style={labelSt}>Daily / Call Name</label><input style={IS} value={dn} onChange={e=>sDn(e.target.value)} placeholder="What people call you" autoComplete="off"/></div>
+        <DateDropdowns day={d} setDay={sD} month={m} setMonth={sM} year={y} setYear={sY} yearStart={1940} yearEnd={2030} label="Date of Birth"/>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div><label style={labelSt}>Gender</label>
+            <div style={{display:'flex',gap:6}}>{['M','F'].map(g=><button key={g} onClick={()=>sGender(g)} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #cbd5e1',cursor:'pointer',fontWeight:'600',background:gender===g?'#0f172a':'#ffffff',color:gender===g?'#ffffff':'#0f172a',fontSize:13,transition:'all 0.2s'}}>{g==='M'?'Male':'Female'}</button>)}</div></div>
+          <div><label style={labelSt}>Lagna (Ascendant)</label>
+            <select style={SS} value={lagna} onChange={e=>sLagna(e.target.value)}>
+              <option value="">Select or get from DrikPanchang</option>
+              {RASHI_ORDER.map(r=><option key={r} value={r}>{r} ({RE[r]})</option>)}
+            </select>
+            <div style={{fontSize:9,color:'#64748b',marginTop:4,fontWeight:'500'}}>Get from: <a href="https://www.drikpanchang.com/kundali/kundali-chart.html" target="_blank" rel="noopener" style={{color:'#f59e0b'}}>DrikPanchang Kundali</a></div>
+          </div>
+        </div>
+        <div><label style={labelSt}>Nakshatra (Moon Star)</label>
+          <select style={SS} value={nakI} onChange={e=>sNI(e.target.value)}>
+            <option value="">Select — from horoscope or DrikPanchang</option>
+            {NAK.map((n,i)=><option key={i} value={i}>{n.n} ({n.lord})</option>)}
+          </select>
+          <div style={{fontSize:9,color:'#64748b',marginTop:4,fontWeight:'500'}}>Get from: <a href="https://www.prokerala.com/astrology/nakshatra-finder/" target="_blank" rel="noopener" style={{color:'#f59e0b'}}>Prokerala Nakshatra Finder</a> | <a href="https://www.drikpanchang.com/panchang/month-panchang.html" target="_blank" rel="noopener" style={{color:'#f59e0b'}}>DrikPanchang</a></div>
+        </div>
+        {nakI!==''&&<div><label style={labelSt}>Pada (1-4)</label>
+          <div style={{display:'flex',gap:6}}>{[1,2,3,4].map(p=>{const nk=NAK[parseInt(nakI)];return(
+            <button key={p} onClick={()=>sPN(String(p))} style={{flex:1,padding:'10px 4px',borderRadius:8,border:'1px solid #cbd5e1',cursor:'pointer',background:padaN===String(p)?'#0f172a':'#ffffff',color:padaN===String(p)?'#ffffff':'#0f172a',fontSize:11,lineHeight:1.3,transition:'all 0.2s'}}>
+              <div style={{fontWeight:'700'}}>P{p}</div><div style={{fontSize:9}}>{nk?.nav[p-1]}</div><div style={{fontSize:10,fontWeight:'700',color:padaN===String(p)?'#fde68a':'#f59e0b'}}>{nk?.let[p-1]}</div>
+            </button>)})}</div></div>}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div><label style={labelSt}>Current Mahadasha</label>
+            <select style={SS} value={maha} onChange={e=>sMaha(e.target.value)}>
+              <option value="">Select Dasha</option>
+              {DASHAS.map(d=><option key={d.val} value={d.val}>{d.label}</option>)}
+            </select>
+            <div style={{fontSize:9,color:'#64748b',marginTop:4,fontWeight:'500'}}>Get from: <a href="https://www.prokerala.com/astrology/vimshottari-dasha.php" target="_blank" rel="noopener" style={{color:'#f59e0b'}}>Prokerala</a></div>
+          </div>
+          <div><label style={labelSt}>Current Antardasha</label>
+            <select style={SS} value={antar} onChange={e=>sAntar(e.target.value)}>
+              <option value="">Select Antardasha</option>
+              {DASHAS.map(d=><option key={d.val} value={d.val}>{d.label}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+      <button style={{...BS,marginTop:20}} onClick={()=>{sS(true);sOpen({core:true})}}>Generate Deep Reading</button>
+    </div>
+
+    {show&&r&&(<div id="personal-results" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{background:'linear-gradient(135deg,#0f172a,#1e293b)',borderRadius:12,padding:'24px 20px',color:'#ffffff',boxShadow:'0 4px 6px rgba(0,0,0,0.1)'}}>
+        <div style={{fontSize:11,opacity:0.7,letterSpacing:1.5,textTransform:'uppercase',marginBottom:4,fontWeight:'600'}}>Personal Reading</div>
+        <div style={{fontSize:24,fontWeight:'800',letterSpacing:0.5,color:'#f8fafc'}}>{name}</div>
+        {dn&&dn!==name&&<div style={{fontSize:13,opacity:0.8,marginTop:4,fontWeight:'500'}}>Known as: {dn}</div>}
+        <div style={{display:'flex',gap:20,marginTop:16,flexWrap:'wrap'}}>
+          <div style={{textAlign:'center'}}><div style={{fontSize:32,fontWeight:'800',color:'#f59e0b'}}>{r.b.r}</div><div style={{fontSize:10,opacity:0.8,fontWeight:'500'}}>Moolank</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:32,fontWeight:'800',color:'#f59e0b'}}>{r.lp.r}</div><div style={{fontSize:10,opacity:0.8,fontWeight:'500'}}>Bhagyank</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:32,fontWeight:'800',color:'#f59e0b'}}>{r.nc.r}</div><div style={{fontSize:10,opacity:0.8,fontWeight:'500'}}>Name#</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:32,fontWeight:'800',color:'#f59e0b'}}>{r.kua}</div><div style={{fontSize:10,opacity:0.8,fontWeight:'500'}}>Kua</div></div>
+          <div style={{textAlign:'center'}}><div style={{fontSize:32,fontWeight:'800',color:'#f59e0b'}}>{r.py}</div><div style={{fontSize:10,opacity:0.8,fontWeight:'500'}}>PY 2026</div></div>
+        </div>
+      </div>
+
+      <div style={cardStyle}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0}}>
+          <Row label="Moolank (Birth)" value={`${r.b.r} — ${r.md_deep?.title}`} sub2={r.b.c>9?`Compound ${r.b.c}: ${CO[r.b.c]}`:''} />
+          <Row label="Bhagyank (LP)" value={`${r.lp.r} — ${PN[r.lp.r]}`} sub2={r.lp.c>9?`Compound ${r.lp.c}: ${CO[r.lp.c]}`:''} />
+          <Row label="Official Name" value={`${r.nc.r} — ${PN[r.nc.r]}`} sub2={r.nc.c>9?`Compound ${r.nc.c}: ${CO[r.nc.c]}`:''} />
+          {r.dc&&<Row label="Daily Name" value={`${r.dc.r} — ${PN[r.dc.r]}`} sub2={r.dc.c>9?`Compound ${r.dc.c}: ${CO[r.dc.c]}`:''} />}
+          <Row label="Kua Number" value={`${r.kua} — ${KE[r.kua]||'—'}`} sub2={`Best Direction: ${KD[r.kua]||'—'} | ${KG.east.includes(r.kua)?'East':'West'} Group`} />
+          <Row label="Personal Year 2026" value={`PY ${r.py}`} sub2={r.py_mean?.split('.')[0]||''} />
+          {WD[r.wd]&&<Row label="Born on" value={`${WD[r.wd]} — ${WDP[r.wd]}`} sub2="Day planet influences personality" />}
+          {lagna&&<Row label="Lagna (Ascendant)" value={`${lagna} (${RE[lagna]})`} sub2={`Lord: ${RL[lagna]}`} />}
+        </div>
+      </div>
+
+      <Grid day={r.dd} month={r.mm} year={r.yy} nameNum={r.nc.r} kuaM={r.kua} kuaF={0} title=""/>
+
+      {r.md_deep&&<Sec id="core" title={`Core Identity — ${r.md_deep.title}`} icon="✦" badge="Moolank">
+        <div style={{marginBottom:12,padding:'12px 16px',background:'#fffbeb',borderRadius:8,border:'1px solid #fde68a'}}>
+          <span style={{fontSize:12,color:'#d97706',fontWeight:'700'}}>Your Number {r.b.r} Nature</span>
+          <div style={{fontSize:11,color:'#64748b',marginTop:4,fontWeight:'500'}}>Born on {r.dd}th — Moolank {r.b.r}{r.b.c>9?` (Compound ${r.b.c}: ${CO[r.b.c]})`:''}</div>
+        </div>
+        {r.md_deep.core.map((c,i)=><Pt key={i} text={c} type="info"/>)}
+      </Sec>}
+
+      {r.md_deep&&<Sec id="sw" title="Strengths & Shadow Sides" icon="⚖" badge="Chaldean 9/10">
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:'800',color:'#059669',marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Strengths</div>
+            {r.md_deep.strength.map((s,i)=><Pt key={i} text={s} type="pos"/>)}
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:'800',color:'#dc2626',marginBottom:8,textTransform:'uppercase',letterSpacing:0.5}}>Shadow Sides</div>
+            {r.md_deep.weakness.map((w,i)=><Pt key={i} text={w} type="neg"/>)}
+          </div>
+        </div>
+      </Sec>}
+
+      <Sec id="destiny" title="Life Path & Destiny" icon="🎯" badge="Bhagyank">
+        <div style={{padding:'12px 16px',background:'#fffbeb',borderRadius:8,marginBottom:12,border:'1px solid #fde68a'}}>
+          <span style={{fontSize:12,color:'#d97706',fontWeight:'700'}}>Bhagyank {r.lp.r} — {PN[r.lp.r]}</span>
+          {r.lp.c>9&&<div style={{fontSize:11,color:'#64748b',marginTop:4,fontWeight:'500'}}>Compound {r.lp.c}: {CO[r.lp.c]}</div>}
+        </div>
+        <Pt text={r.lp_deep||''} type="info"/>
+        {r.b.r===r.lp.r&&<Pt text={`DOUBLE ${r.b.r} — Rare! Your Moolank and Bhagyank are identical. Your inborn nature and your destiny are perfectly aligned. No internal conflict between who you are and where life is taking you. This is exceptional.`} type="pos"/>}
+        {gF(r.b.r,r.lp.r)==='Hostile'&&<Pt text={`Your Moolank (${r.b.r}) and Bhagyank (${r.lp.r}) are in a hostile relationship. This creates an internal tension — your natural personality pulls one way, your destiny pulls another. Success comes when you learn to integrate both energies rather than fighting yourself.`} type="neg"/>}
+        {gF(r.b.r,r.lp.r)==='Friendly'&&<Pt text={`Your Moolank (${r.b.r}) and Bhagyank (${r.lp.r}) are friendly. Your natural personality supports your life's purpose. Less internal friction means your energy goes outward rather than being wasted in self-conflict.`} type="pos"/>}
+      </Sec>
+
+      <Sec id="name" title="Name Number Analysis" icon="N" badge="Chaldean 10/10">
+        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
+          {r.nc.l.split('').map((ch,i)=><span key={i} style={{background:'#ffffff',borderRadius:6,padding:'4px 8px',fontSize:13,border:'1px solid #cbd5e1',boxShadow:'0 1px 2px rgba(0,0,0,0.05)'}}><b style={{color:'#0f172a'}}>{ch}</b><span style={{color:'#d97706',fontSize:10,marginLeft:4,fontWeight:'600'}}>{CH[ch]}</span></span>)}
+          <span style={{background:'#0f172a',color:'#ffffff',borderRadius:6,padding:'4px 12px',fontSize:13,fontWeight:'700'}}>={r.nc.t}={r.nc.r}</span>
+        </div>
+        <Pt text={`Official name "${name}" vibrates at ${r.nc.r} (${PN[r.nc.r]}). ${gF(r.nc.r,r.b.r)==='Friendly'?'This name is FRIENDLY with your Moolank — it amplifies your natural energy.':gF(r.nc.r,r.b.r)==='Hostile'?'WARNING: This name CONFLICTS with your Moolank. The name you carry is working against your natural energy. Consider adjusting the spelling.':'This name is neutral with your Moolank — neither amplifying nor reducing.'}`} type={gF(r.nc.r,r.b.r)==='Friendly'?'pos':gF(r.nc.r,r.b.r)==='Hostile'?'neg':'info'}/>
+        {r.dc&&<Pt text={`Daily name "${dn}" vibrates at ${r.dc.r} (${PN[r.dc.r]}). ${gF(r.dc.r,r.b.r)==='Friendly'?'Daily name is FRIENDLY with Moolank — people calling you this name reinforces positive energy.':gF(r.dc.r,r.b.r)==='Hostile'?'Daily name CONFLICTS with Moolank — even informal use weakens your energy field.':'Daily name is neutral with Moolank.'}`} type={gF(r.dc.r,r.b.r)==='Friendly'?'pos':gF(r.dc.r,r.b.r)==='Hostile'?'neg':'info'}/>}
+        {r.nc.r!==r.lp.r&&r.nc.r!==r.b.r&&<Pt text={`Name number ${r.nc.r} is different from both Moolank (${r.b.r}) and Bhagyank (${r.lp.r}). Check if ${r.nc.r} is missing from your Lo-Shu grid — if yes, this name is filling an energy gap, which is excellent.`} type="warn"/>}
+        {r.grid.missing.includes(r.nc.r)&&<Pt text={`EXCELLENT: Name number ${r.nc.r} fills a MISSING slot in your Lo-Shu grid. This name is actively compensating for an energy gap in your birth chart.`} type="pos"/>}
+      </Sec>
+
+      {r.missing.length>0&&<Sec id="missing" title="Missing Numbers — Energy Gaps" icon="▢" badge={`${r.missing.length} Missing`}>
+        <Pt text={`You have ${r.missing.length} missing number${r.missing.length>1?'s':''} in your Lo-Shu grid. Missing numbers represent areas where you need to consciously develop energy. They are not permanent deficiencies — they are growth areas.`} type="warn"/>
+        {r.missing.map((n,i)=><Pt key={i} text={MISSING_NUM_MEANING[n]||`Missing ${n}`} type="info"/>)}
+      </Sec>}
+
+      <Sec id="py" title={`Personal Year ${r.py} — 2026`} icon="⏳" badge="Current Phase">
+        <Pt text={r.py_mean||`Personal Year ${r.py}`} type="info"/>
+        {r.py<=3&&<Pt text="You are in the growth phase of your 9-year cycle. Expand, initiate, and invest in new directions." type="pos"/>}
+        {r.py>=7&&<Pt text="You are in the completion phase of your 9-year cycle. Reflect, release, and prepare for new beginnings." type="warn"/>}
+      </Sec>
+
+      {r.ni&&<Sec id="vedic" title={`Nakshatra Reading — ${r.ni.name}`} icon="✨" badge="Vedic 8/10">
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0,marginBottom:16}}>
+          <Row label="Nakshatra" value={`${r.ni.name}`} sub2={`Deity: ${r.ni.deity}`} />
+          <Row label="Lord" value={r.ni.lord} sub2={PN[getNakLordNum(r.ni.lord)]} />
+          <Row label="Pada" value={`Pada ${r.ni.pada}`} sub2={`Name letter: ${r.ni.letter}`} />
+          <Row label="Navamsha" value={`${r.ni.navamsha} (${RE[r.ni.navamsha]})`} sub2={`Lord: ${r.ni.navLord}`} />
+          <Row label="Rashi" value={`${r.ni.rashi} (${RE[r.ni.rashi]})`} sub2={`Lord: ${RL[r.ni.rashi]}`} />
+          <Row label="Gana" value={r.ni.gana} sub2={r.ni.gana==='Deva'?'Divine temperament':r.ni.gana==='Manushya'?'Human, balanced':'Intense, independent'} />
+        </div>
+        <Pt text={NAK_DEEP.lord_meaning[r.ni.lord]||''} type="info"/>
+        <Pt text={NAK_DEEP.gana_meaning[r.ni.gana]||''} type="info"/>
+        {r.ni.navamsha===r.ni.rashi&&<Pt text={`VARGOTTAMA: Your Nakshatra Rashi (${r.ni.rashi}) and Navamsha (${r.ni.navamsha}) are the same sign. This is powerful — your outer personality and inner soul nature are fully aligned. Very strong chart placement.`} type="pos"/>}
+        {r.aligned&&<Pt text={`CHALDEAN-VEDIC ALIGNMENT: Your Nakshatra lord (${r.ni.lord} = ${r.nakLordNum}) matches your Chaldean numbers. Both systems confirm the same energy — very high confidence in this reading.`} type="pos"/>}
+        {!r.aligned&&<Pt text={`Note: Nakshatra lord (${r.ni.lord}) and Chaldean core numbers differ. Both systems give valid but distinct perspectives on your nature. Read both layers as complements, not contradictions.`} type="warn"/>}
+      </Sec>}
+
+      {r.md_deep&&<Sec id="career" title="Career, Finance & Life Path" icon="💼" badge="Chaldean + Vedic">
+        <Pt text={r.md_deep.finance} type="info"/>
+        {r.ni&&<Pt text={`Vedic layer: ${NAK_DEEP.lord_meaning[r.ni.lord]} This energy shapes your professional calling alongside your numbers.`} type="info"/>}
+        <Pt text={`Kua ${r.kua} (${KE[r.kua]} element) means your best work direction is ${KD[r.kua]}. Face this direction during important meetings, negotiations, and focused work.`} type="pos"/>
+        {gF(r.b.r,r.lp.r)==='Hostile'&&<Pt text="Your Birth and LP numbers are in tension — your natural skills may be in a different field from your destiny. Long-term fulfilment comes from integrating both, not choosing one." type="warn"/>}
+      </Sec>}
+
+      {r.md_deep&&<Sec id="relation" title="Relationships & Compatibility Pattern" icon="♥" badge="Chaldean 8/10">
+        <Pt text={r.md_deep.relation} type="info"/>
+        {r.ni&&<Pt text={`Vedic Gana: ${NAK_DEEP.gana_meaning[r.ni.gana]} This temperament directly affects how you engage in relationships.`} type="info"/>}
+        <Pt text={`Numbers most compatible with Moolank ${r.b.r}: ${[1,2,3,4,5,6,7,8,9].filter(n=>gF(r.b.r,n)==='Friendly'||gF(r.b.r,n)==='Same').join(', ')}. Numbers to approach carefully: ${[1,2,3,4,5,6,7,8,9].filter(n=>gF(r.b.r,n)==='Hostile').join(', ')}.`} type="info"/>
+      </Sec>}
+
+      {r.md_deep&&<Sec id="health" title="Health Tendencies" icon="✙" badge="General Guidance">
+        <Pt text={r.md_deep.health} type="warn"/>
+        {r.ni&&<Pt text={`Nakshatra lord ${r.ni.lord} governs specific body systems — consult an Ayurvedic or Jyotish practitioner to understand your constitutional type and seasonal vulnerabilities.`} type="info"/>}
+        <Pt text="These are tendencies, not certainties. A healthy lifestyle overrides numerical predispositions. Use this as awareness, not as diagnosis." type="info"/>
+      </Sec>}
+
+      {(maha||antar)&&<Sec id="dasha" title="Current Dasha Period Analysis" icon="◷" badge="Vedic 7/10">
+        {maha&&<><Pt text={`Mahadasha — ${maha}: ${DASHA_MEANING[maha]||''}`} type="info"/>
+        {maha==='Shani'&&<Pt text="Saturn Mahadasha is the most karmic period. Results are slow but permanent. Do not compare your timeline to others. Your harvest is being prepared carefully." type="warn"/>}
+        {maha==='Guru'&&<Pt text="Jupiter Mahadasha is one of the most auspicious periods. Expand — this is not the time for excessive caution. Jupiter's blessings are available — reach for them." type="pos"/>}
+        {maha==='Rahu'&&<Pt text="Rahu Mahadasha brings intensity and rapid change. Foreign connections and unconventional paths open up. Stay grounded — Rahu amplifies both the brilliant and the reckless." type="warn"/>}</>}
+        {antar&&maha&&<Pt text={`Currently in ${maha}-${antar} Antardasha: The sub-period lord (${antar}) modifies how the Mahadasha energy expresses. ${antar} themes are the immediate focus; ${maha} themes are the broader framework.`} type="info"/>}
+        <Pt text="For exact Dasha start/end dates and sub-period analysis, verify on DrikPanchang Vimshottari Dasha calculator with birth time and place." type="warn"/>
+      </Sec>}
+
+      {r.rem&&<Sec id="remedy" title="Remedies & Strengthening Practices" icon="🕉" badge="General Guidance">
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0}}>
+          <Row label="Power Day" value={r.rem.day} />
+          <Row label="Fasting" value={r.rem.fast} />
+          <Row label="Colors" value={r.rem.color} />
+          <Row label="Direction" value={r.rem.direction} />
+          <Row label="Activity" value={r.rem.activity} />
+          <Row label="Donation" value={r.rem.donate} />
+        </div>
+        <div style={{marginTop:16,padding:'12px 16px',background:'#fffbeb',borderRadius:8,border:'1px solid #fde68a'}}>
+          <div style={{fontSize:11,fontWeight:'700',color:'#d97706',marginBottom:6}}>Mantra</div>
+          <div style={{fontSize:13,color:'#0f172a',fontStyle:'italic',fontWeight:'500'}}>{r.rem.mantra}</div>
+        </div>
+        <div style={{marginTop:12,padding:'12px 16px',background:'#fef2f2',borderRadius:8,border:'1px solid #fecaca'}}>
+          <div style={{fontSize:11,fontWeight:'700',color:'#dc2626',marginBottom:4}}>Gemstone Note</div>
+          <div style={{fontSize:11,color:'#0f172a',fontWeight:'500'}}>{r.rem.gemstone}. Gemstones are powerful — always get a full birth chart reading before wearing any stone.</div>
+        </div>
+      </Sec>}
+
+      <PDFBtn targetId="personal-results" filename={`${name||'Client'}_Personal_Report.pdf`} />
+    </div>)}
+  </div>);
+}
+
+function BabyPlanner(){
+  const [sd,sSd]=useState('');const [sm,sSm]=useState('');const [sy,sSy]=useState('2026');
+  const [bn,sBn]=useState('');
+  const [nakI,sNI]=useState('');const [padaN,sPN]=useState('');
+  const [fn,sFn]=useState('');const [fd,sFd]=useState('');const [fm,sFm]=useState('');const [fy,sFy]=useState('');
+  const [mn,sMn]=useState('');const [md,sMd]=useState('');const [mm,sMm]=useState('');const [my,sMy]=useState('');
+  const [show,sShow]=useState(false);
+
+  const r=useMemo(()=>{
+    if(!sd||!sm||!sy)return null;const d=parseInt(sd),m=parseInt(sm),y=parseInt(sy);if(isNaN(d)||isNaN(m)||isNaN(y))return null;
+    const birth=cB(d),lp=cL(d,m,y),dt=new Date(y,m-1,d),wd=dt.getDay();
+    const bc=bn?cN(bn):null;const kuaM=cKua(y,'M');const kuaF=cKua(y,'F');
+    const grid=gG(d,m,y,bc?.r,kuaM,kuaF);
+    const sugg=grid.missing.map(num=>({num,planet:PN[num],fb:gF(num,birth.r),fl:gF(num,lp.r)})).filter(s=>s.fb!=="Hostile"&&s.fl!=="Hostile");
+    let ni=null;if(nakI!==''&&padaN!==''){const idx=parseInt(nakI),p=parseInt(padaN);
+      if(!isNaN(idx)&&!isNaN(p)&&idx>=0&&idx<27&&p>=1&&p<=4){const nk=NAK[idx];
+        ni={name:nk.n,lord:nk.lord,deity:nk.deity,gana:nk.gana,rashi:nk.r[p-1],navamsha:nk.nav[p-1],letter:nk.let[p-1],pada:p,navLord:RL[nk.nav[p-1]]}}}
+    let fc=null,mc=null;
+    if(fd&&fm&&fy){const a=parseInt(fd),b=parseInt(fm),c=parseInt(fy);if(!isNaN(a)&&!isNaN(b)&&!isNaN(c))fc={b:cB(a),lp:cL(a,b,c),n:fn?cN(fn):null,name:fn||'Father'}}
+    if(md&&mm&&my){const a=parseInt(md),b=parseInt(mm),c=parseInt(my);if(!isNaN(a)&&!isNaN(b)&&!isNaN(c))mc={b:cB(a),lp:cL(a,b,c),n:mn?cN(mn):null,name:mn||'Mother'}}
+    return{birth,lp,wd,dt,bc,kuaM,kuaF,grid,sugg,ni,fc,mc,day:d};
+  },[sd,sm,sy,bn,nakI,padaN,fn,fd,fm,fy,mn,md,mm,my]);
+
+  return(<div style={{display:'flex',flexDirection:'column',gap:20}}>
+    <div style={CS}>
+      <h3 style={{color:'#0f172a',fontWeight:'800',fontSize:18,marginBottom:16}}>Baby Birth Date Planner</h3>
+      <div style={{marginBottom:14}}>
+        <DateDropdowns day={sd} setDay={sSd} month={sm} setMonth={sSm} year={sy} setYear={sSy} yearStart={1940} yearEnd={2030} label="Baby Birth Date"/>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+        <div><label style={{fontSize:11,color:'#64748b',fontWeight:'600',marginBottom:6,display:'block'}}>Baby Name (test)</label><input style={IS} value={bn} onChange={e=>sBn(e.target.value)} placeholder="Test a name"/></div>
+        <div><label style={{fontSize:11,color:'#64748b',fontWeight:'600',marginBottom:6,display:'block'}}>Nakshatra (from Panchang)</label>
+          <select style={SS} value={nakI} onChange={e=>sNI(e.target.value)}><option value="">Select</option>{NAK.map((n,i)=><option key={i} value={i}>{n.n}({n.lord})</option>)}</select>
+          <div style={{marginTop:4,fontSize:9,color:'#64748b'}}>Look up: <a href="https://www.prokerala.com/astrology/panchang/" target="_blank" rel="noopener" style={{color:'#f59e0b',fontWeight:'500'}}>Prokerala</a> | <a href="https://www.drikpanchang.com/panchang/day-panchang.html" target="_blank" rel="noopener" style={{color:'#f59e0b',fontWeight:'500'}}>DrikPanchang</a></div></div>
+      </div>
+      {nakI!==''&&<div style={{marginBottom:16}}><label style={{fontSize:11,color:'#64748b',fontWeight:'600',marginBottom:6,display:'block'}}>Pada</label>
+        <div style={{display:'flex',gap:6}}>{[1,2,3,4].map(p=>{const nk=NAK[parseInt(nakI)];return(<button key={p} onClick={()=>sPN(String(p))} style={{flex:1,padding:'10px 4px',borderRadius:8,border:'1px solid #cbd5e1',cursor:'pointer',background:padaN===String(p)?'#0f172a':'#ffffff',color:padaN===String(p)?'#ffffff':'#0f172a',fontSize:11,lineHeight:1.3,transition:'all 0.2s'}}>
+          <div style={{fontWeight:'700'}}>P{p}</div><div style={{fontSize:9}}>{nk?.nav[p-1]}({RE[nk?.nav[p-1]]})</div><div style={{fontSize:10,fontWeight:'700',color:padaN===String(p)?'#fde68a':'#f59e0b'}}>{nk?.let[p-1]}</div></button>)})}</div></div>}
+      <div style={{borderTop:'1px solid #e2e8f0',paddingTop:16,marginTop:8}}>
+        <h4 style={{color:'#0f172a',fontSize:13,fontWeight:'700',marginBottom:12}}>Parents</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div style={{background:'#f8fafc',padding:12,borderRadius:10,border:'1px solid #e2e8f0'}}><div style={{fontSize:11,color:'#0f172a',fontWeight:'700',marginBottom:6}}>Father</div>
+            <input style={{...IS,marginBottom:8,fontSize:12,padding:'8px 10px'}} value={fn} onChange={e=>sFn(e.target.value)} placeholder="Daily name"/>
+            <SmallDateDropdowns day={fd} setDay={sFd} month={fm} setMonth={sFm} year={fy} setYear={sFy}/></div>
+          <div style={{background:'#f8fafc',padding:12,borderRadius:10,border:'1px solid #e2e8f0'}}><div style={{fontSize:11,color:'#0f172a',fontWeight:'700',marginBottom:6}}>Mother</div>
+            <input style={{...IS,marginBottom:8,fontSize:12,padding:'8px 10px'}} value={mn} onChange={e=>sMn(e.target.value)} placeholder="Daily name"/>
+            <SmallDateDropdowns day={md} setDay={sMd} month={mm} setMonth={sMm} year={my} setYear={sMy}/></div>
+        </div></div>
+      <button style={{...BS,marginTop:20}} onClick={()=>sShow(true)}>Analyze Date</button>
+    </div>
+
+    {show&&r&&(<div id="baby-results" className="anim" style={{display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{background:'linear-gradient(135deg,#0f172a,#1e293b)',borderRadius:12,padding:20,border:'none',textAlign:'center',boxShadow:'0 4px 6px rgba(0,0,0,0.1)'}}>
+        <h3 style={{color:'#ffffff',fontWeight:'800',fontSize:20}}>{r.dt.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h3>
+        <p style={{color:'#94a3b8',fontSize:12,marginTop:4,fontWeight:'500'}}>Day: {WDP[r.wd]} | #{WDN[r.wd]}</p></div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:12}}>
+        <NC label="Birth" value={r.birth.r} compound={r.birth.c}/><NC label="Life Path" value={r.lp.r} compound={r.lp.c}/>
+        <NC label="Kua(Boy)" value={r.kuaM} compound={0}/><NC label="Kua(Girl)" value={r.kuaF} compound={0}/></div>
+      {r.birth.r===r.lp.r&&<div style={{background:'#ecfdf5',border:'1px solid #10b981',borderRadius:10,padding:14,textAlign:'center'}}>
+        <span style={{color:'#059669',fontWeight:'800',fontSize:18}}>DOUBLE {r.birth.r}!</span><p style={{color:'#059669',fontSize:12,fontWeight:'600',marginTop:4}}>Birth = LP. Rare coherence.</p></div>}
+      
+      <div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:12,fontSize:15}}>Kua Number</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div style={{background:'#f8fafc',borderRadius:10,padding:14,border:'1px solid #e2e8f0'}}>
+            <div style={{color:'#3b82f6',fontWeight:'800',fontSize:13,marginBottom:6}}>If BOY — Kua {r.kuaM}</div>
+            <div style={{fontSize:11,color:'#334155',fontWeight:'500'}}>Element: <b style={{color:'#0f172a'}}>{KE[r.kuaM]}</b> | Dir: <b style={{color:'#0f172a'}}>{KD[r.kuaM]}</b> | {KG.east.includes(r.kuaM)?'East':'West'} Group</div>
+            <div style={{fontSize:10,fontWeight:'600',color:r.grid.missing.includes(r.kuaM)?'#059669':'#d97706',marginTop:6}}>{r.grid.missing.includes(r.kuaM)?'Fills missing grid slot!':'Overlaps existing DOB digit'}</div>
+          </div>
+          <div style={{background:'#f8fafc',borderRadius:10,padding:14,border:'1px solid #e2e8f0'}}>
+            <div style={{color:'#db2777',fontWeight:'800',fontSize:13,marginBottom:6}}>If GIRL — Kua {r.kuaF}</div>
+            <div style={{fontSize:11,color:'#334155',fontWeight:'500'}}>Element: <b style={{color:'#0f172a'}}>{KE[r.kuaF]}</b> | Dir: <b style={{color:'#0f172a'}}>{KD[r.kuaF]}</b> | {KG.east.includes(r.kuaF)?'East':'West'} Group</div>
+            <div style={{fontSize:10,fontWeight:'600',color:r.grid.missing.includes(r.kuaF)?'#059669':'#d97706',marginTop:6}}>{r.grid.missing.includes(r.kuaF)?'Fills missing grid slot!':'Overlaps existing DOB digit'}</div>
+          </div>
+        </div></div>
+
+      <Grid day={parseInt(sd)} month={parseInt(sm)} year={parseInt(sy)} nameNum={r.bc?.r||0} kuaM={r.kuaM} kuaF={r.kuaF} title="Baby's Birth Chart Grid"/>
+      
+      <div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:12,fontSize:15}}>Name Number Suggestions</h4>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(90px,1fr))',gap:10}}>
+          {r.sugg.map(s=><div key={s.num} style={{background:'#ffffff',borderRadius:10,padding:12,textAlign:'center',border:'1px solid #e2e8f0',boxShadow:'0 1px 3px rgba(0,0,0,0.02)'}}>
+            <div style={{fontSize:24,fontWeight:'800',color:PC[s.num]}}>{s.num}</div><div style={{fontSize:9,fontWeight:'600',color:'#64748b',marginTop:2}}>{s.planet?.split('(')[0]}</div>
+            <div style={{fontSize:9,fontWeight:'700',color:s.fb==='Friendly'?'#059669':'#d97706',marginTop:4}}>B: {s.fb}</div></div>)}</div></div>
+      
+      {r.bc&&<div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:12,fontSize:15}}>"{bn}" = {r.bc.r} ({PN[r.bc.r]})</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+          <HB n1={r.bc.r} n2={r.birth.r} l1="N" l2="B"/><HB n1={r.bc.r} n2={r.lp.r} l1="N" l2="LP"/><HB n1={r.bc.r} n2={r.kuaM} l1="N" l2="Kua(B)"/></div></div>}
+      
+      {r.ni&&<div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',fontSize:15,marginBottom:12,textAlign:'center'}}>VEDIC vs CHALDEAN</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0,border:'1px solid #cbd5e1',borderRadius:12,overflow:'hidden'}}>
+          <div style={{background:'#1e293b',color:'#ffffff',padding:10,textAlign:'center',fontWeight:'700',fontSize:12}}>CHALDEAN</div>
+          <div style={{background:'#f59e0b',color:'#ffffff',padding:10,textAlign:'center',fontWeight:'700',fontSize:12}}>VEDIC</div>
+          <div style={{padding:12,borderBottom:'1px solid #e2e8f0',borderRight:'1px solid #e2e8f0',fontSize:11}}><b style={{color:'#0f172a'}}>Birth:</b> {r.birth.r}={PN[r.birth.r]}</div>
+          <div style={{padding:12,borderBottom:'1px solid #e2e8f0',fontSize:11,background:'#f8fafc'}}><b style={{color:'#d97706'}}>Nak:</b> {r.ni.name}={r.ni.lord}</div>
+          <div style={{padding:12,borderBottom:'1px solid #e2e8f0',borderRight:'1px solid #e2e8f0',fontSize:11}}><b style={{color:'#0f172a'}}>LP:</b> {r.lp.r}={PN[r.lp.r]}</div>
+          <div style={{padding:12,borderBottom:'1px solid #e2e8f0',fontSize:11,background:'#f8fafc'}}><b style={{color:'#d97706'}}>Nav P{r.ni.pada}:</b> {r.ni.navamsha}={r.ni.navLord}</div>
+          <div style={{padding:12,borderRight:'1px solid #e2e8f0',fontSize:11}}><b style={{color:'#0f172a'}}>Day:</b> {WD[r.wd]}</div>
+          <div style={{padding:12,fontSize:11,background:'#f8fafc'}}><b style={{color:'#d97706'}}>Rashi:</b> {r.ni.rashi}({RE[r.ni.rashi]})</div>
+        </div>
+        <div style={{marginTop:12,textAlign:'center',fontSize:11,fontWeight:'500',padding:10,borderRadius:10,background:'#fffbeb',color:'#b45309',border:'1px solid #fde68a'}}>Pada Letter: <b style={{fontSize:16,color:'#d97706'}}>{r.ni.letter}</b> | Gana: <b>{r.ni.gana}</b> | Deity: <b>{r.ni.deity}</b></div>
+      </div>}
+      
+      {r.ni&&(()=>{const ins=getInsights(r.ni);if(!ins)return null;return(
+        <div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:12,fontSize:15}}>Positives & Negatives</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+          <div>{ins.pos.map((p,i)=><div key={i} style={{fontSize:11,color:'#334155',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #059669',lineHeight:1.4}}>{p}</div>)}</div>
+          <div>{ins.neg.map((n,i)=><div key={i} style={{fontSize:11,color:'#334155',fontWeight:'500',marginBottom:6,paddingLeft:8,borderLeft:'3px solid #dc2626',lineHeight:1.4}}>{n}</div>)}</div>
+        </div>
+        {ins.cau.length>0&&<div style={{marginTop:10}}>{ins.cau.map((c,i)=><div key={i} style={{fontSize:11,color:'#334155',fontWeight:'500',marginBottom:5,paddingLeft:8,borderLeft:'3px solid #d97706',lineHeight:1.4}}>{c}</div>)}</div>}
+        </div>)})()}
+      
+      {(r.fc||r.mc)&&<div style={CS}><h4 style={{color:'#0f172a',fontWeight:'800',marginBottom:12,fontSize:15}}>Parent Impact</h4>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+          {r.fc&&<div style={{background:'#f8fafc',padding:14,borderRadius:10,border:'1px solid #e2e8f0'}}><div style={{color:'#0f172a',fontWeight:'800',fontSize:13,marginBottom:6}}>Father ({r.fc.name})</div>
+            <div style={{fontSize:10,color:'#64748b',fontWeight:'600',marginBottom:8}}>B:{r.fc.b.r} | LP:{r.fc.lp.r}{r.fc.n?` | N:${r.fc.n.r}`:''}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:10}}><HB n1={r.fc.b.r} n2={r.birth.r} l1="F.B" l2="Baby"/><HB n1={r.fc.lp.r} n2={r.lp.r} l1="F.LP" l2="Baby"/></div>
+            {getPI(r.fc,r.birth,r.lp,r.ni).map((p,i)=><div key={i} style={{fontSize:10,color:'#334155',fontWeight:'500',marginBottom:4,paddingLeft:8,borderLeft:`3px solid ${p.t==='pos'?'#059669':p.t==='neg'?'#dc2626':'#d97706'}`}}>{p.x}</div>)}</div>}
+          {r.mc&&<div style={{background:'#f8fafc',padding:14,borderRadius:10,border:'1px solid #e2e8f0'}}><div style={{color:'#0f172a',fontWeight:'800',fontSize:13,marginBottom:6}}>Mother ({r.mc.name})</div>
+            <div style={{fontSize:10,color:'#64748b',fontWeight:'600',marginBottom:8}}>B:{r.mc.b.r} | LP:{r.mc.lp.r}{r.mc.n?` | N:${r.mc.n.r}`:''}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr
