@@ -11,17 +11,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #f1f5f9; 
-            font-family: 'Inter', sans-serif; 
-            color: #0f172a;
-        }
-        /* Custom Scrollbar for a premium feel */
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; color: #0f172a; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -36,7 +30,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- CORE ASTRO/NUMEROLOGY LOGIC ---
         const CHALDEAN = {
             A:1, I:1, J:1, Q:1, Y:1, B:2, K:2, R:2, C:3, G:3, L:3, S:3,
             D:4, M:4, T:4, E:5, H:5, N:5, X:5, U:6, V:6, W:6, O:7, Z:7, F:8, P:8
@@ -52,9 +45,7 @@
 
         const reduceToSingleDigit = (num) => {
             if (!num) return 0;
-            while (num > 9) {
-                num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-            }
+            while (num > 9) num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
             return num;
         };
 
@@ -65,17 +56,17 @@
             return digits;
         };
 
-        // --- MAIN APPLICATION COMPONENT ---
         const App = () => {
-            // UI State
             const [activeTab, setActiveTab] = useState('profile');
 
-            // Form State (with LocalStorage Persistence)
             const [dob, setDob] = useState(() => localStorage.getItem('gp_dob') || "");
             const [rashi, setRashi] = useState(() => localStorage.getItem('gp_rashi') || "Scorpio");
             const [nakshatra, setNakshatra] = useState(() => localStorage.getItem('gp_nakshatra') || "Anuradha");
             const [firstName, setFirstName] = useState(() => localStorage.getItem('gp_first') || "");
             const [lastName, setLastName] = useState(() => localStorage.getItem('gp_last') || "");
+            
+            // State for Name Comparison Tab
+            const [savedNames, setSavedNames] = useState(() => JSON.parse(localStorage.getItem('gp_saved_names')) || []);
 
             useEffect(() => {
                 localStorage.setItem('gp_dob', dob);
@@ -83,9 +74,9 @@
                 localStorage.setItem('gp_nakshatra', nakshatra);
                 localStorage.setItem('gp_first', firstName);
                 localStorage.setItem('gp_last', lastName);
-            }, [dob, rashi, nakshatra, firstName, lastName]);
+                localStorage.setItem('gp_saved_names', JSON.stringify(savedNames));
+            }, [dob, rashi, nakshatra, firstName, lastName, savedNames]);
 
-            // Derived Data Calculations
             let moolank = 0, bhagyank = 0, gridNumbers = [], missingNumbers = [1,2,3,4,5,6,7,8,9];
             if (dob) {
                 const dateParts = dob.split('-');
@@ -104,78 +95,79 @@
             const fullReduced = reduceToSingleDigit(fullTotal);
             const isMarsRuled = rashi === "Aries" || rashi === "Scorpio";
 
-            // PDF Generator (With strict Babel Fix)
+            const addNameToComparison = () => {
+                if(!firstName) return;
+                const newEntry = {
+                    id: Date.now(),
+                    first: firstName.toUpperCase(),
+                    last: lastName.toUpperCase(),
+                    firstT: firstTotal,
+                    firstR: firstReduced,
+                    fullT: fullTotal,
+                    fullR: fullReduced
+                };
+                setSavedNames([...savedNames, newEntry]);
+            };
+
+            const removeName = (id) => {
+                setSavedNames(savedNames.filter(n => n.id !== id));
+            };
+
             const generatePDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(20);
-                doc.text("GURU JI ASTROPALM - MASTER REPORT", 20, 20);
-                
-                doc.setFont("helvetica", "normal");
+                doc.text("GURU JI ASTROPALM", 20, 20);
                 doc.setFontSize(12);
-                doc.text(`Date of Birth: ${dob}`, 20, 35);
-                doc.text(`Moolank: ${moolank} | Bhagyank: ${bhagyank}`, 20, 45);
-                doc.text(`Rashi: ${rashi} | Nakshatra: ${nakshatra}`, 20, 55);
+                doc.text(`DOB: ${dob} | Moolank: ${moolank} | Bhagyank: ${bhagyank}`, 20, 35);
                 
-                doc.text(`Everyday Name: ${firstName.toUpperCase()} (${firstTotal} -> ${firstReduced})`, 20, 75);
-                doc.text(`Official Name: ${firstName.toUpperCase()} ${lastName.toUpperCase()} (${fullTotal} -> ${fullReduced})`, 20, 85);
-
                 const AMBER = [245, 158, 11];
                 const LGREY = [148, 163, 184];
-
-                let yPos = 105;
-                doc.text("Lo Shu Grid Analysis:", 20, yPos);
+                let yPos = 55;
+                
                 [1,2,3,4,5,6,7,8,9].forEach((num, index) => {
                     const present = gridNumbers.includes(num);
                     doc.setTextColor(...(present ? AMBER : LGREY));
-                    doc.text(`Number ${num}: ${present ? "Present" : "Missing"}`, 20, yPos + 10 + (index * 7));
+                    doc.text(`Grid ${num}: ${present ? "Present" : "Missing"}`, 20, yPos + (index * 7));
                 });
                 
                 doc.setTextColor(0,0,0);
-                doc.save(`AstroPalm_Report_${dob || 'Client'}.pdf`);
+                doc.save("AstroPalm_Report.pdf");
             };
 
-            // Navigation Component
-            const NavItem = ({ id, label, icon }) => (
+            const NavItem = ({ id, label }) => (
                 <button 
                     onClick={() => setActiveTab(id)}
-                    className={`flex items-center px-6 py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${activeTab === id ? 'border-amber-500 text-amber-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+                    className={`px-4 py-3 text-sm font-semibold transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === id ? 'border-amber-500 text-amber-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
                 >
-                    <span className="mr-2">{icon}</span>
                     {label}
                 </button>
             );
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    {/* Header Topbar */}
                     <header className="bg-slate-900 text-white shadow-md z-10 relative">
                         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center text-slate-900 font-bold text-xl">ॐ</div>
-                                <h1 className="text-xl font-bold tracking-tight">GURU JI <span className="text-amber-400 font-normal">ASTROPALM</span></h1>
-                            </div>
-                            <button onClick={generatePDF} className="bg-white/10 hover:bg-white/20 text-white text-sm font-medium py-2 px-4 rounded transition">
-                                Export PDF Report
+                            <h1 className="text-xl font-bold tracking-tight">GURU JI <span className="text-amber-400">ASTROPALM</span></h1>
+                            <button onClick={generatePDF} className="bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-bold py-2 px-4 rounded transition">
+                                Export PDF
                             </button>
                         </div>
                     </header>
 
-                    {/* Main Content Area */}
-                    <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8">
+                    <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
                         
-                        {/* Universal Client Data Form (Always visible at top) */}
-                        <div className="glass-panel rounded-xl p-6 mb-8">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {/* Universal Client Data Form */}
+                        <div className="glass-panel rounded-xl p-4 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Date of Birth</label>
-                                    <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition" />
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date of Birth</label>
+                                    <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Rashi (Moon Sign)</label>
-                                    <select value={rashi} onChange={e => setRashi(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rashi</label>
+                                    <select value={rashi} onChange={e => setRashi(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                                         <option value="Aries">Mesha (Aries)</option>
                                         <option value="Taurus">Vrishabha (Taurus)</option>
                                         <option value="Gemini">Mithuna (Gemini)</option>
@@ -191,183 +183,156 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nakshatra</label>
-                                    <input type="text" value={nakshatra} onChange={e => setNakshatra(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2.5 text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none transition" placeholder="e.g. Anuradha" />
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Nakshatra</label>
+                                    <input type="text" value={nakshatra} onChange={e => setNakshatra(e.target.value)} className="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
                                 </div>
-                                <div className="flex flex-col justify-end space-y-2">
-                                    <div className="bg-amber-50 rounded-lg p-2 flex justify-between items-center border border-amber-100">
-                                        <span className="text-xs text-amber-800 font-semibold">Moolank:</span>
-                                        <span className="text-lg font-bold text-amber-600">{moolank || '-'}</span>
+                                <div className="flex space-x-4 items-end">
+                                    <div className="bg-amber-50 rounded p-2 flex-1 border border-amber-100 text-center">
+                                        <div className="text-[10px] text-amber-800 font-bold uppercase">Moolank</div>
+                                        <div className="text-xl font-bold text-amber-600">{moolank || '-'}</div>
                                     </div>
-                                    <div className="bg-slate-50 rounded-lg p-2 flex justify-between items-center border border-slate-200">
-                                        <span className="text-xs text-slate-600 font-semibold">Bhagyank:</span>
-                                        <span className="text-lg font-bold text-slate-700">{bhagyank || '-'}</span>
+                                    <div className="bg-slate-50 rounded p-2 flex-1 border border-slate-200 text-center">
+                                        <div className="text-[10px] text-slate-600 font-bold uppercase">Bhagyank</div>
+                                        <div className="text-xl font-bold text-slate-700">{bhagyank || '-'}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tabs Navigation */}
-                        <div className="flex bg-slate-200/50 rounded-t-xl overflow-hidden border-b border-slate-300">
-                            <NavItem id="profile" label="Astrological Profile" icon="📋" />
-                            <NavItem id="naming" label="Dual-Name Engine" icon="✨" />
-                            <NavItem id="muhurat" label="Muhurat & Event" icon="⏳" />
-                            <NavItem id="compatibility" label="Compatibility & Doshas" icon="⚖️" />
+                        {/* Tabs Navigation Restored */}
+                        <div className="flex bg-slate-200/50 rounded-t-xl overflow-x-auto border-b border-slate-300">
+                            <NavItem id="profile" label="Dashboard" />
+                            <NavItem id="baby_names" label="Baby Names" />
+                            <NavItem id="names_comparison" label="Name Comparison" />
+                            <NavItem id="events" label="Events & Muhurat" />
+                            <NavItem id="marriage" label="Marriage / Doshas" />
                         </div>
 
-                        {/* Tab Content Area */}
-                        <div className="glass-panel rounded-b-xl border-t-0 p-8 min-h-[500px]">
+                        <div className="glass-panel rounded-b-xl border-t-0 p-6 min-h-[500px]">
                             
-                            {/* TAB 1: PROFILE */}
+                            {/* TAB: PROFILE */}
                             {activeTab === 'profile' && (
-                                <div className="space-y-8 animate-fade-in">
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        <div>
-                                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><span className="w-2 h-6 bg-amber-500 rounded mr-3"></span> Lo Shu Grid Alignment</h3>
-                                            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                                                <p className="text-sm text-slate-600 mb-4">Numbers missing from the birth grid require conscious energetic balancing through naming, colors, or behavioral remedies.</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {missingNumbers.map(n => (
-                                                        <span key={n} className="px-3 py-1 bg-red-50 text-red-600 font-semibold rounded-full text-sm border border-red-100">Missing {n}</span>
-                                                    ))}
-                                                    {gridNumbers.length > 0 && [1,2,3,4,5,6,7,8,9].filter(n => gridNumbers.includes(n)).map(n => (
-                                                        <span key={n} className="px-3 py-1 bg-green-50 text-green-700 font-semibold rounded-full text-sm border border-green-100">Active {n}</span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><span className="w-2 h-6 bg-blue-500 rounded mr-3"></span> Guidance & Remedies</h3>
-                                            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4 text-sm text-slate-700">
-                                                <p><strong>Career Indicators:</strong> Based on Moolank {moolank}, paths in {moolank === 6 ? 'arts, beauty, luxury, or aesthetics' : 'leadership, analysis, or communication'} are highly favored.</p>
-                                                <p><strong>Parental Impact:</strong> A Destiny Number {bhagyank} indicates strong intuitive bonds. Mother should prioritize emotional self-care.</p>
-                                                <p><strong>Remedy Strategy:</strong> Utilize colors corresponding to missing numbers ({missingNumbers.join(', ')}) in daily wear or environment.</p>
-                                            </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Lo Shu Grid Alignment</h3>
+                                    <div className="bg-white p-6 rounded border border-slate-200">
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            {missingNumbers.map(n => <span key={n} className="px-3 py-1 bg-red-50 text-red-600 font-semibold rounded-full text-sm border border-red-100">Missing {n}</span>)}
+                                            {gridNumbers.length > 0 && [1,2,3,4,5,6,7,8,9].filter(n => gridNumbers.includes(n)).map(n => <span key={n} className="px-3 py-1 bg-green-50 text-green-700 font-semibold rounded-full text-sm border border-green-100">Active {n}</span>)}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* TAB 2: DUAL NAME ENGINE */}
-                            {activeTab === 'naming' && (
-                                <div className="space-y-6 animate-fade-in">
-                                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-6">
-                                        <h3 className="text-slate-800 font-bold mb-1">The Master Strategy</h3>
-                                        <p className="text-sm text-slate-600">The First Name sets the daily energetic vibration. The Full Name locks the official destiny path. Tune these carefully to fill different gaps in the Lo Shu grid.</p>
-                                    </div>
-                                    
+                            {/* TAB: BABY NAMES (Dual Engine) */}
+                            {activeTab === 'baby_names' && (
+                                <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
-                                            <label className="block text-sm font-semibold text-slate-700">Everyday Name (First Name)</label>
-                                            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold text-slate-800 focus:border-amber-500 outline-none uppercase transition" placeholder="e.g. NAVYAA" />
-                                            <div className="flex items-center space-x-3 text-sm">
-                                                <span className="text-slate-500">Compound: <strong>{firstTotal}</strong></span>
-                                                <span className="text-slate-300">|</span>
-                                                <span className="text-slate-700">Daily Vibration: <strong className="text-lg text-amber-600">{firstReduced}</strong></span>
-                                                {missingNumbers.includes(firstReduced) && <span className="text-green-600 text-xs font-bold px-2 py-1 bg-green-50 rounded">✅ Fills Gap</span>}
+                                            <label className="block text-sm font-semibold text-slate-700">First Name</label>
+                                            <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold uppercase outline-none" />
+                                            <div className="text-sm">
+                                                Compound: <strong>{firstTotal}</strong> &rarr; Final: <strong className="text-amber-600">{firstReduced}</strong>
                                             </div>
                                         </div>
-                                        
                                         <div className="space-y-4">
-                                            <label className="block text-sm font-semibold text-slate-700">Family Name (Surname)</label>
-                                            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold text-slate-800 focus:border-amber-500 outline-none uppercase transition" placeholder="e.g. SAGAR" />
-                                            <div className="text-sm text-slate-500">
-                                                Surname Compound: <strong>{lastTotal}</strong>
-                                            </div>
+                                            <label className="block text-sm font-semibold text-slate-700">Surname</label>
+                                            <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border-b-2 border-slate-300 bg-transparent text-2xl p-2 font-bold uppercase outline-none" />
+                                            <div className="text-sm">Compound: <strong>{lastTotal}</strong></div>
                                         </div>
                                     </div>
+                                    
+                                    <button onClick={addNameToComparison} className="bg-slate-800 text-white px-4 py-2 rounded text-sm font-bold hover:bg-slate-700">
+                                        Save to Comparison &rarr;
+                                    </button>
 
                                     {(firstName || lastName) && (
-                                        <div className="mt-8 p-6 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl text-white shadow-lg">
-                                            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Official Destiny Lock</h4>
-                                            <div className="text-3xl font-bold tracking-widest mb-4">{firstName.toUpperCase()} {lastName.toUpperCase()}</div>
-                                            <div className="flex items-center justify-between border-t border-slate-700 pt-4">
-                                                <div className="text-sm text-slate-300">Total Compound: <strong className="text-white">{fullTotal}</strong></div>
-                                                <div className="text-right">
-                                                    <span className="text-sm text-slate-400 mr-3">Final Destiny Value:</span>
-                                                    <span className="text-3xl font-bold text-amber-400">{fullReduced}</span>
-                                                </div>
-                                            </div>
+                                        <div className="mt-6 p-6 bg-slate-900 rounded-xl text-white">
+                                            <div className="text-xs text-slate-400 uppercase tracking-widest mb-1">Official Name Lock</div>
+                                            <div className="text-2xl font-bold tracking-widest">{firstName.toUpperCase()} {lastName.toUpperCase()}</div>
+                                            <div className="mt-4 text-sm text-slate-300">Total: {fullTotal} &rarr; Destiny Value: <strong className="text-amber-400 text-xl">{fullReduced}</strong></div>
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* TAB 3: MUHURAT */}
-                            {activeTab === 'muhurat' && (
-                                <div className="space-y-6 animate-fade-in">
+                            {/* TAB: NAME COMPARISON */}
+                            {activeTab === 'names_comparison' && (
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Saved Names Analysis</h3>
+                                    {savedNames.length === 0 ? (
+                                        <p className="text-slate-500 text-sm">No names saved yet. Add them from the Baby Names tab.</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider">
+                                                        <th className="p-3 border-b">Full Name</th>
+                                                        <th className="p-3 border-b">First Name (Comp/Red)</th>
+                                                        <th className="p-3 border-b">Full Name (Comp/Red)</th>
+                                                        <th className="p-3 border-b">Fills Gaps?</th>
+                                                        <th className="p-3 border-b"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="text-sm">
+                                                    {savedNames.map((name) => (
+                                                        <tr key={name.id} className="border-b hover:bg-slate-50">
+                                                            <td className="p-3 font-bold text-slate-800">{name.first} {name.last}</td>
+                                                            <td className="p-3">{name.firstT} &rarr; <span className="font-bold text-amber-600">{name.firstR}</span></td>
+                                                            <td className="p-3">{name.fullT} &rarr; <span className="font-bold text-amber-600">{name.fullR}</span></td>
+                                                            <td className="p-3">
+                                                                <div className="flex flex-col text-xs space-y-1">
+                                                                    <span className={missingNumbers.includes(name.firstR) ? "text-green-600 font-bold" : "text-slate-400"}>1st: {missingNumbers.includes(name.firstR) ? 'Yes' : 'No'}</span>
+                                                                    <span className={missingNumbers.includes(name.fullR) ? "text-green-600 font-bold" : "text-slate-400"}>Full: {missingNumbers.includes(name.fullR) ? 'Yes' : 'No'}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3">
+                                                                <button onClick={() => removeName(name.id)} className="text-red-500 hover:text-red-700 text-xs font-bold">Remove</button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* TAB: EVENTS & MUHURAT */}
+                            {activeTab === 'events' && (
+                                <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                                            <h3 className="text-lg font-bold text-red-800 mb-4 flex items-center">⛔ Inauspicious Windows (IST)</h3>
-                                            <p className="text-sm text-slate-600 mb-4">Values calculated dynamically for the current day of the week.</p>
+                                        <div className="bg-white p-6 rounded border border-slate-200">
+                                            <h3 className="text-lg font-bold text-red-800 mb-4">⛔ Daily Inauspicious Windows</h3>
                                             <div className="space-y-3">
-                                                <div className="flex justify-between items-center p-3 bg-red-50 rounded border border-red-100">
-                                                    <span className="text-sm font-semibold text-red-900">Rahu Kaal (Avoid New Tasks)</span>
+                                                <div className="flex justify-between p-3 bg-red-50 rounded border border-red-100">
+                                                    <span className="text-sm font-semibold text-red-900">Rahu Kaal</span>
                                                     <span className="font-mono text-red-700">{RAHU_KAAL[new Date().getDay()]}</span>
                                                 </div>
-                                                <div className="flex justify-between items-center p-3 bg-orange-50 rounded border border-orange-100">
-                                                    <span className="text-sm font-semibold text-orange-900">Yamaganda (Caution)</span>
+                                                <div className="flex justify-between p-3 bg-orange-50 rounded border border-orange-100">
+                                                    <span className="text-sm font-semibold text-orange-900">Yamaganda</span>
                                                     <span className="font-mono text-orange-700">{YAMAGANDA[new Date().getDay()]}</span>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center">✨ Event Guidelines</h3>
-                                            <ul className="text-sm text-slate-700 space-y-3">
-                                                <li className="flex items-start"><span className="text-green-500 mr-2">✓</span> <strong>Vehicle:</strong> Wed, Thu, Fri. Avoid Saturdays. Fast moving signs preferred.</li>
-                                                <li className="flex items-start"><span className="text-green-500 mr-2">✓</span> <strong>Home/Griha:</strong> Fixed signs preferred (Taurus, Leo). Avoid Amavasya.</li>
-                                                <li className="flex items-start"><span className="text-green-500 mr-2">✓</span> <strong>Business:</strong> Wed (Mercury), Thu (Jupiter). Pushya Nakshatra excellent.</li>
-                                            </ul>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* TAB 4: COMPATIBILITY */}
-                            {activeTab === 'compatibility' && (
-                                <div className="space-y-6 animate-fade-in">
-                                    <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div>
-                                                <h3 className="text-lg font-bold text-slate-800">Chart Energy Analysis</h3>
-                                                <p className="text-sm text-slate-500">Rashi level temperament checks and Ashtakoot readiness.</p>
-                                            </div>
+                            {/* TAB: MARRIAGE / DOSHAS */}
+                            {activeTab === 'marriage' && (
+                                <div>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4">Chart Temperament Analysis</h3>
+                                    {isMarsRuled ? (
+                                        <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                                            <h4 className="font-bold text-orange-800">Martian Energy Detected (Rashi Level)</h4>
+                                            <p className="text-sm text-orange-700 mt-1">Confidence: 5/10. {rashi} is ruled by Mars. Full chart needed to confirm Kuja/Mangal Dosha.</p>
                                         </div>
-
-                                        <div className="mb-6">
-                                            {isMarsRuled ? (
-                                                <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
-                                                    <h4 className="font-bold text-orange-800">Martian Energy Detected (Rashi Level)</h4>
-                                                    <p className="text-sm text-orange-700 mt-1">Confidence: 5/10. The Rashi ({rashi}) is ruled by Mars. While indicating a strong, active temperament, a full Lagna chart analysis is required to confirm true Kuja/Mangal Dosha.</p>
-                                                </div>
-                                            ) : (
-                                                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
-                                                    <h4 className="font-bold text-green-800">Standard Temperament</h4>
-                                                    <p className="text-sm text-green-700 mt-1">No direct Martian rulership detected at the Moon sign (Rashi) level.</p>
-                                                </div>
-                                            )}
+                                    ) : (
+                                        <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                            <h4 className="font-bold text-green-800">Standard Temperament</h4>
+                                            <p className="text-sm text-green-700 mt-1">No direct Martian rulership at Rashi level.</p>
                                         </div>
-
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                                            <div className="p-4 border border-slate-100 bg-slate-50 rounded-lg">
-                                                <div className="text-xs font-semibold text-slate-400 uppercase">Nadi Dosha</div>
-                                                <div className="mt-1 text-sm font-medium text-slate-700">Check Required</div>
-                                            </div>
-                                            <div className="p-4 border border-slate-100 bg-slate-50 rounded-lg">
-                                                <div className="text-xs font-semibold text-slate-400 uppercase">Bhakoot</div>
-                                                <div className="mt-1 text-sm font-medium text-slate-700">Check Required</div>
-                                            </div>
-                                            <div className="p-4 border border-slate-100 bg-slate-50 rounded-lg">
-                                                <div className="text-xs font-semibold text-slate-400 uppercase">Gana</div>
-                                                <div className="mt-1 text-sm font-medium text-slate-700">Check Required</div>
-                                            </div>
-                                            <div className="p-4 border border-slate-100 bg-slate-50 rounded-lg">
-                                                <div className="text-xs font-semibold text-slate-400 uppercase">Total Score</div>
-                                                <div className="mt-1 text-sm font-medium text-slate-700">__/36</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
 
@@ -380,9 +345,5 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-    <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-    </style>
 </body>
 </html>
